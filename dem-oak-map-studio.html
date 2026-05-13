@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DEM Oak — Map Studio</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Archivo:wght@300;400;500;600&display=swap');
+
+:root {
+  --bark:     #3D2B1F;
+  --bark2:    #2a1d12;
+  --sand:     #E2C9A8;
+  --offwhite: #F5EEE6;
+  --accent:   #8B6A4F;
+  --panel:    rgba(42,29,18,0.98);
+  --border:   rgba(226,201,168,0.18);
+  --gold:     #C9A96E;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--bark2);
+  font-family: 'Archivo', sans-serif;
+  color: var(--offwhite);
+}
+
+/* ══════════════════════════════════════════
+   HEADER
+══════════════════════════════════════════ */
+#header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 52px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 18px;
+  z-index: 500;
+  backdrop-filter: blur(8px);
+}
+
+.logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 17px;
+  font-weight: 300;
+  letter-spacing: 0.18em;
+  color: var(--sand);
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.logo em { font-style: italic; color: var(--offwhite); }
+
+.sep { width: 1px; height: 24px; background: var(--border); flex-shrink: 0; }
+
+/* control groups */
+.cg {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+}
+
+.cl {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+select, input[type="number"] {
+  background: rgba(245,238,230,0.06);
+  border: 1px solid var(--border);
+  color: var(--offwhite);
+  font-family: 'Archivo', sans-serif;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 1px;
+  outline: none;
+  cursor: pointer;
+}
+select option { background: #2a1d12; }
+input[type="number"] { width: 62px; }
+
+input[type="range"] {
+  width: 72px;
+  accent-color: var(--gold);
+  cursor: pointer;
+}
+
+.qval {
+  font-size: 10px;
+  color: var(--sand);
+  min-width: 30px;
+}
+
+/* drop zone button */
+#drop-btn {
+  background: rgba(201,169,110,0.12);
+  border: 1px dashed var(--gold);
+  color: var(--gold);
+  font-family: 'Archivo', sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 5px 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+#drop-btn:hover { background: rgba(201,169,110,0.22); }
+
+#file-input { display: none; }
+
+/* selected marker controls */
+#marker-controls {
+  display: none;
+  align-items: center;
+  gap: 7px;
+  background: rgba(201,169,110,0.08);
+  border: 1px solid rgba(201,169,110,0.25);
+  padding: 4px 10px;
+  border-radius: 1px;
+}
+
+#marker-controls .cl { color: var(--gold); }
+
+#size-range { width: 60px; accent-color: var(--gold); }
+#size-val { font-size: 10px; color: var(--sand); min-width: 28px; }
+
+.btn-del {
+  background: rgba(200,60,60,0.15);
+  border: 1px solid rgba(200,60,60,0.4);
+  color: #e88;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  cursor: pointer;
+  font-family: 'Archivo', sans-serif;
+}
+
+.btn-del:hover { background: rgba(200,60,60,0.3); }
+
+/* export button */
+#btn-export {
+  margin-left: auto;
+  background: var(--sand);
+  color: var(--bark);
+  border: none;
+  padding: 8px 22px;
+  font-family: 'Archivo', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+#btn-export:hover { background: var(--offwhite); }
+
+/* ══════════════════════════════════════════
+   MAIN CANVAS AREA
+══════════════════════════════════════════ */
+#stage {
+  position: fixed;
+  top: 52px; left: 0; right: 0; bottom: 28px;
+  overflow: hidden;
+}
+
+#map {
+  width: 100%;
+  height: 100%;
+}
+
+/* ══════════════════════════════════════════
+   PNG OVERLAY LAYER
+══════════════════════════════════════════ */
+#overlay-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* individual marker overlay */
+.map-marker {
+  position: absolute;
+  cursor: grab;
+  user-select: none;
+  pointer-events: all;
+  transform-origin: center center;
+}
+
+.map-marker:active { cursor: grabbing; }
+
+.map-marker img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  border-radius: 2px;
+}
+
+.map-marker.selected {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* resize handle */
+.resize-handle {
+  position: absolute;
+  bottom: -5px;
+  right: -5px;
+  width: 12px;
+  height: 12px;
+  background: var(--gold);
+  cursor: se-resize;
+  border-radius: 50%;
+  pointer-events: all;
+  display: none;
+}
+
+.map-marker.selected .resize-handle { display: block; }
+
+/* ══════════════════════════════════════════
+   CROP FRAME
+══════════════════════════════════════════ */
+#crop-frame {
+  position: absolute;
+  border: 2px solid var(--gold);
+  z-index: 20;
+  pointer-events: none;
+  box-shadow:
+    0 0 0 9999px rgba(30,18,10,0.52),
+    inset 0 0 0 1px rgba(201,169,110,0.15);
+}
+
+.crop-rule {
+  position: absolute;
+  background: rgba(201,169,110,0.2);
+  pointer-events: none;
+}
+/* rule thirds */
+.cr-v1 { top: 0; bottom: 0; left: 33.33%; width: 1px; }
+.cr-v2 { top: 0; bottom: 0; left: 66.66%; width: 1px; }
+.cr-h1 { left: 0; right: 0; top: 33.33%; height: 1px; }
+.cr-h2 { left: 0; right: 0; top: 66.66%; height: 1px; }
+
+.crop-corner-mark {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-color: var(--gold);
+  border-style: solid;
+}
+.ccm-tl { top: -2px; left: -2px; border-width: 3px 0 0 3px; }
+.ccm-tr { top: -2px; right: -2px; border-width: 3px 3px 0 0; }
+.ccm-bl { bottom: -2px; left: -2px; border-width: 0 0 3px 3px; }
+.ccm-br { bottom: -2px; right: -2px; border-width: 0 3px 3px 0; }
+
+#crop-tag {
+  position: absolute;
+  top: -26px;
+  left: -2px;
+  background: var(--gold);
+  color: var(--bark);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  white-space: nowrap;
+  font-family: 'Archivo', sans-serif;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+#crop-px {
+  position: absolute;
+  bottom: -22px;
+  right: -2px;
+  font-size: 9px;
+  color: var(--gold);
+  letter-spacing: 0.06em;
+  pointer-events: none;
+  font-family: 'Archivo', sans-serif;
+}
+
+/* ══════════════════════════════════════════
+   STATUS BAR
+══════════════════════════════════════════ */
+#statusbar {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 28px;
+  background: var(--panel);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 24px;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  color: rgba(226,201,168,0.45);
+  z-index: 500;
+}
+
+#statusbar b { color: var(--sand); font-weight: 400; }
+
+.sb-hint { margin-left: auto; color: rgba(226,201,168,0.28); }
+
+/* ══════════════════════════════════════════
+   DRAG-OVER INDICATOR
+══════════════════════════════════════════ */
+#drag-over-mask {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(201,169,110,0.08);
+  border: 3px dashed var(--gold);
+  z-index: 900;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
+}
+#drag-over-mask.show { display: flex; }
+#drag-over-mask p {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  font-style: italic;
+  color: var(--gold);
+  letter-spacing: 0.06em;
+}
+#drag-over-mask small {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--sand);
+  text-transform: uppercase;
+}
+
+/* ══════════════════════════════════════════
+   EXPORT MODAL
+══════════════════════════════════════════ */
+#modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(20,12,6,0.88);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+#modal.open { display: flex; }
+
+.modal-inner {
+  background: var(--offwhite);
+  color: var(--bark);
+  padding: 36px;
+  max-width: 580px;
+  width: 92%;
+  text-align: center;
+}
+
+.modal-inner h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  font-weight: 300;
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+}
+
+.modal-inner .sub {
+  font-size: 11px;
+  color: var(--accent);
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+#preview-wrap {
+  border: 1px solid rgba(61,43,31,0.18);
+  overflow: hidden;
+  max-height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ddd;
+  margin-bottom: 20px;
+}
+#preview-wrap img { max-width: 100%; max-height: 320px; }
+
+#modal-status {
+  font-size: 11px;
+  color: var(--accent);
+  margin-bottom: 16px;
+  min-height: 18px;
+}
+
+.modal-btns { display: flex; gap: 12px; justify-content: center; }
+
+.btn-primary {
+  background: var(--bark);
+  color: var(--offwhite);
+  border: none;
+  padding: 10px 28px;
+  font-family: 'Archivo', sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid var(--bark);
+  color: var(--bark);
+  padding: 10px 28px;
+  font-family: 'Archivo', sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+/* progress bar */
+#prog-bar {
+  height: 2px;
+  background: rgba(61,43,31,0.1);
+  margin-bottom: 16px;
+  overflow: hidden;
+  display: none;
+}
+#prog-fill {
+  height: 100%;
+  background: var(--bark);
+  width: 0%;
+  transition: width 0.3s;
+}
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<div id="header">
+  <div class="logo">DEM <em>Oak</em></div>
+  <div class="sep"></div>
+
+  <!-- Aspect -->
+  <div class="cg">
+    <span class="cl">Aspect</span>
+    <select id="aspect" onchange="onAspectChange()">
+      <option value="16:9" selected>16 : 9</option>
+      <option value="4:3">4 : 3</option>
+      <option value="3:2">3 : 2</option>
+      <option value="1:1">1 : 1</option>
+      <option value="2:1">2 : 1</option>
+      <option value="A4L">A4 Landscape</option>
+      <option value="A4P">A4 Portrait</option>
+      <option value="custom">Custom…</option>
+    </select>
+    <span id="cw-wrap" style="display:none;align-items:center;gap:4px">
+      <input type="number" id="cw" value="1920" min="200" max="6000" placeholder="W" oninput="onAspectChange()">
+      <span style="font-size:10px;color:var(--accent)">×</span>
+      <input type="number" id="ch" value="1080" min="200" max="6000" placeholder="H" oninput="onAspectChange()">
+    </span>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- Resolution -->
+  <div class="cg">
+    <span class="cl">Export W</span>
+    <select id="res">
+      <option value="1280">1280 px</option>
+      <option value="1920" selected>1920 px</option>
+      <option value="2560">2560 px</option>
+      <option value="3840">3840 px (4K)</option>
+    </select>
+  </div>
+
+  <!-- Scale for html2canvas -->
+  <div class="cg">
+    <span class="cl">Scale</span>
+    <input type="range" id="scale-range" min="1" max="4" step="0.5" value="2" oninput="document.getElementById('scale-val').textContent=this.value+'×'">
+    <span class="qval" id="scale-val">2×</span>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- Add PNG -->
+  <button id="drop-btn" onclick="document.getElementById('file-input').click()">+ Drop / Add PNG</button>
+  <input type="file" id="file-input" accept="image/png,image/svg+xml,image/webp,image/jpeg" multiple onchange="onFileSelect(this)">
+
+  <!-- Selected marker controls -->
+  <div id="marker-controls">
+    <span class="cl">Size</span>
+    <input type="range" id="size-range" min="20" max="400" value="80" oninput="onResizeSlider(this.value)">
+    <span id="size-val" class="qval">80px</span>
+    <button class="btn-del" onclick="deleteSelected()">Remove</button>
+  </div>
+
+  <button id="btn-export" onclick="startExport()">Export Map</button>
+</div>
+
+<!-- ══ STAGE ══ -->
+<div id="stage"
+  ondragover="onDragOver(event)"
+  ondragleave="onDragLeave(event)"
+  ondrop="onDrop(event)">
+
+  <div id="map"></div>
+
+  <!-- PNG overlays live here -->
+  <div id="overlay-layer"></div>
+
+  <!-- Crop frame -->
+  <div id="crop-frame">
+    <div id="crop-tag">Export Frame — pan &amp; zoom map inside</div>
+    <div class="crop-rule cr-v1"></div>
+    <div class="crop-rule cr-v2"></div>
+    <div class="crop-rule cr-h1"></div>
+    <div class="crop-rule cr-h2"></div>
+    <div class="crop-corner-mark ccm-tl"></div>
+    <div class="crop-corner-mark ccm-tr"></div>
+    <div class="crop-corner-mark ccm-bl"></div>
+    <div class="crop-corner-mark ccm-br"></div>
+    <div id="crop-px"></div>
+  </div>
+</div>
+
+<!-- ══ DRAG OVER MASK ══ -->
+<div id="drag-over-mask">
+  <p>Drop your PNG here</p>
+  <small>It will appear on the map — drag &amp; resize freely</small>
+</div>
+
+<!-- ══ STATUS BAR ══ -->
+<div id="statusbar">
+  <span>Center <b id="sb-center">—</b></span>
+  <span>Zoom <b id="sb-zoom">—</b></span>
+  <span>Markers <b id="sb-markers">0</b></span>
+  <span class="sb-hint">Drag PNGs from desktop onto the map &nbsp;·&nbsp; Click marker to select &nbsp;·&nbsp; Scroll to resize selected</span>
+</div>
+
+<!-- ══ EXPORT MODAL ══ -->
+<div id="modal">
+  <div class="modal-inner">
+    <h2>Export Preview</h2>
+    <p class="sub" id="modal-sub">Capturing map with overlays…</p>
+    <div id="prog-bar"><div id="prog-fill"></div></div>
+    <div id="preview-wrap" style="display:none"><img id="preview-img" src="" alt=""></div>
+    <div id="modal-status"></div>
+    <div class="modal-btns" id="modal-btns" style="display:none">
+      <button class="btn-primary" id="btn-dl">Download</button>
+      <button class="btn-secondary" onclick="closeModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ html2canvas ══ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<script>
+// ─────────────────────────────────────────
+// CONSTANTS
+// ─────────────────────────────────────────
+const API_KEY = 'AIzaSyBLzi_xut6Y6lgShdOkPCePTXreCqUBJVo';
+const CENTER  = { lat: 19.2330, lng: 72.8580 }; // Gorai 1, Borivali West
+const ZOOM    = 14;
+
+const MAP_STYLE = [{"featureType":"administrative","elementType":"labels.text.fill","stylers":[{"color":"#444444"}]},{"featureType":"administrative.country","elementType":"all","stylers":[{"visibility":"off"}]},{"featureType":"administrative.province","elementType":"all","stylers":[{"visibility":"off"}]},{"featureType":"administrative.locality","elementType":"all","stylers":[{"visibility":"off"}]},{"featureType":"administrative.neighborhood","elementType":"all","stylers":[{"visibility":"off"}]},{"featureType":"administrative.land_parcel","elementType":"all","stylers":[{"visibility":"off"}]},{"featureType":"landscape","elementType":"all","stylers":[{"color":"#f2f2f2"},{"visibility":"on"}]},{"featureType":"poi","elementType":"all","stylers":[{"visibility":"off"}]},{"featureType":"poi.medical","elementType":"all","stylers":[{"visibility":"off"}]},{"featureType":"road","elementType":"all","stylers":[{"saturation":-100},{"lightness":45}]},{"featureType":"road.highway","elementType":"all","stylers":[{"visibility":"simplified"}]},{"featureType":"road.arterial","elementType":"all","stylers":[{"visibility":"on"}]},{"featureType":"road.arterial","elementType":"labels.text","stylers":[{"visibility":"on"}]},{"featureType":"road.arterial","elementType":"labels.icon","stylers":[{"visibility":"off"}]},{"featureType":"road.local","elementType":"all","stylers":[{"visibility":"off"}]},{"featureType":"road.local","elementType":"labels.text","stylers":[{"visibility":"off"}]},{"featureType":"transit","elementType":"all","stylers":[{"visibility":"off"}]},{"featureType":"transit.station.rail","elementType":"all","stylers":[{"visibility":"on"}]},{"featureType":"water","elementType":"all","stylers":[{"color":"#3a2d1c"},{"visibility":"on"},{"saturation":"-39"},{"lightness":"23"},{"weight":"0.01"}]}];
+
+const ASPECTS = {
+  '16:9': [16,9], '4:3': [4,3], '3:2': [3,2],
+  '1:1':  [1,1],  '2:1': [2,1],
+  'A4L':  [297,210], 'A4P': [210,297]
+};
+
+// ─────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────
+let map;
+let markers    = [];      // { el, img, x, y, w, h }
+let selected   = null;
+let cropX = 0, cropY = 0, cropW = 0, cropH = 0;
+
+// ─────────────────────────────────────────
+// MAP INIT
+// ─────────────────────────────────────────
+function initMap() {
+  map = new google.maps.Map(document.getElementById('map'), {
+    center: CENTER,
+    zoom: ZOOM,
+    styles: MAP_STYLE,
+    mapTypeControl: false,
+    streetViewControl: false,
+    fullscreenControl: false,
+    zoomControlOptions: { position: google.maps.ControlPosition.RIGHT_CENTER },
+    gestureHandling: 'greedy'
+  });
+
+  map.addListener('center_changed', updateStatus);
+  map.addListener('zoom_changed',   updateStatus);
+
+  // click on map deselects
+  map.addListener('click', () => deselect());
+
+  // Wait for map tiles to settle then init crop
+  google.maps.event.addListenerOnce(map, 'idle', () => {
+    initCrop();
+    updateStatus();
+  });
+}
+
+// Load Maps JS API
+(function() {
+  const s = document.createElement('script');
+  s.src = `https://maps.googleapis.com/maps/api/js?key=${API_KEY}&callback=initMap`;
+  s.async = true;
+  document.head.appendChild(s);
+})();
+
+// ─────────────────────────────────────────
+// CROP FRAME
+// ─────────────────────────────────────────
+function initCrop() {
+  const stage = document.getElementById('stage');
+  const sw = stage.offsetWidth;
+  const sh = stage.offsetHeight;
+  const [arW, arH] = getAR();
+
+  let w = sw * 0.74;
+  let h = w * arH / arW;
+  if (h > sh * 0.80) { h = sh * 0.80; w = h * arW / arH; }
+
+  cropW = Math.round(w);
+  cropH = Math.round(h);
+  cropX = Math.round((sw - cropW) / 2);
+  cropY = Math.round((sh - cropH) / 2);
+
+  placeCrop();
+}
+
+function placeCrop() {
+  const cf = document.getElementById('crop-frame');
+  cf.style.left   = cropX + 'px';
+  cf.style.top    = cropY + 'px';
+  cf.style.width  = cropW + 'px';
+  cf.style.height = cropH + 'px';
+
+  const res = parseInt(document.getElementById('res').value);
+  const [arW, arH] = getAR();
+  const expH = Math.round(res * arH / arW);
+  document.getElementById('crop-px').textContent = `${res} × ${expH} px`;
+}
+
+function getAR() {
+  const v = document.getElementById('aspect').value;
+  if (v === 'custom') {
+    return [
+      parseInt(document.getElementById('cw').value) || 1920,
+      parseInt(document.getElementById('ch').value) || 1080
+    ];
+  }
+  return ASPECTS[v];
+}
+
+function onAspectChange() {
+  const v = document.getElementById('aspect').value;
+  document.getElementById('cw-wrap').style.display = v === 'custom' ? 'flex' : 'none';
+  initCrop();
+}
+
+window.addEventListener('resize', () => { if (map) initCrop(); });
+
+// ─────────────────────────────────────────
+// STATUS BAR
+// ─────────────────────────────────────────
+function updateStatus() {
+  if (!map) return;
+  const c = map.getCenter();
+  document.getElementById('sb-center').textContent =
+    `${c.lat().toFixed(4)}, ${c.lng().toFixed(4)}`;
+  document.getElementById('sb-zoom').textContent = map.getZoom();
+  document.getElementById('sb-markers').textContent = markers.length;
+}
+
+// ─────────────────────────────────────────
+// PNG MARKERS — ADD
+// ─────────────────────────────────────────
+function onFileSelect(input) {
+  [...input.files].forEach(addFile);
+  input.value = '';
+}
+
+function addFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => spawnMarker(e.target.result);
+  reader.readAsDataURL(file);
+}
+
+function spawnMarker(src) {
+  const stage = document.getElementById('stage');
+  const layer = document.getElementById('overlay-layer');
+
+  const el = document.createElement('div');
+  el.className = 'map-marker';
+
+  const img = document.createElement('img');
+  img.src = src;
+  img.draggable = false;
+
+  const handle = document.createElement('div');
+  handle.className = 'resize-handle';
+
+  el.appendChild(img);
+  el.appendChild(handle);
+  layer.appendChild(el);
+
+  // Default size & position (center of crop frame)
+  const w = 80, h = 80;
+  const x = cropX + cropW / 2 - w / 2;
+  const y = cropY + cropH / 2 - h / 2;
+
+  const m = { el, img, x, y, w, h };
+  markers.push(m);
+
+  applyPos(m);
+  bindMarker(m, handle);
+  selectMarker(m);
+  updateStatus();
+}
+
+function applyPos(m) {
+  m.el.style.left   = m.x + 'px';
+  m.el.style.top    = m.y + 'px';
+  m.el.style.width  = m.w + 'px';
+  m.el.style.height = m.h + 'px';
+}
+
+// ─────────────────────────────────────────
+// DRAG — MOVE MARKER
+// ─────────────────────────────────────────
+function bindMarker(m, handle) {
+  // click to select
+  m.el.addEventListener('mousedown', e => {
+    if (e.target === handle) return; // handled by resize
+    e.stopPropagation();
+    selectMarker(m);
+    startMove(e, m);
+  });
+
+  // resize handle
+  handle.addEventListener('mousedown', e => {
+    e.stopPropagation();
+    selectMarker(m);
+    startResize(e, m);
+  });
+
+  // scroll to resize when selected
+  m.el.addEventListener('wheel', e => {
+    if (selected !== m) return;
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -5 : 5;
+    m.w = Math.max(20, m.w + delta);
+    m.h = Math.max(20, m.h + delta);
+    applyPos(m);
+    syncSizeSlider(m.w);
+  }, { passive: false });
+}
+
+function startMove(e, m) {
+  const startX = e.clientX - m.x;
+  const startY = e.clientY - m.y;
+
+  const onMove = ev => {
+    m.x = ev.clientX - startX;
+    m.y = ev.clientY - startY;
+    applyPos(m);
+  };
+  const onUp = () => {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+  };
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+
+function startResize(e, m) {
+  const startX  = e.clientX;
+  const startW  = m.w;
+
+  const onMove = ev => {
+    const dw = ev.clientX - startX;
+    m.w = Math.max(20, startW + dw);
+    m.h = m.w; // uniform scale
+    applyPos(m);
+    syncSizeSlider(m.w);
+  };
+  const onUp = () => {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+  };
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+
+// ─────────────────────────────────────────
+// SELECT / DESELECT
+// ─────────────────────────────────────────
+function selectMarker(m) {
+  if (selected) selected.el.classList.remove('selected');
+  selected = m;
+  m.el.classList.add('selected');
+  document.getElementById('marker-controls').style.display = 'flex';
+  syncSizeSlider(m.w);
+}
+
+function deselect() {
+  if (selected) selected.el.classList.remove('selected');
+  selected = null;
+  document.getElementById('marker-controls').style.display = 'none';
+}
+
+function syncSizeSlider(w) {
+  const s = document.getElementById('size-range');
+  s.value = Math.min(400, Math.round(w));
+  document.getElementById('size-val').textContent = Math.round(w) + 'px';
+}
+
+function onResizeSlider(val) {
+  if (!selected) return;
+  selected.w = parseInt(val);
+  selected.h = parseInt(val);
+  applyPos(selected);
+  document.getElementById('size-val').textContent = val + 'px';
+}
+
+function deleteSelected() {
+  if (!selected) return;
+  selected.el.remove();
+  markers = markers.filter(m => m !== selected);
+  selected = null;
+  document.getElementById('marker-controls').style.display = 'none';
+  updateStatus();
+}
+
+// ─────────────────────────────────────────
+// DRAG & DROP FROM DESKTOP
+// ─────────────────────────────────────────
+let dragCount = 0;
+
+document.addEventListener('dragenter', e => {
+  if ([...e.dataTransfer.types].includes('Files')) {
+    dragCount++;
+    document.getElementById('drag-over-mask').classList.add('show');
+  }
+});
+
+document.addEventListener('dragleave', e => {
+  dragCount--;
+  if (dragCount <= 0) {
+    dragCount = 0;
+    document.getElementById('drag-over-mask').classList.remove('show');
+  }
+});
+
+function onDragOver(e) { e.preventDefault(); }
+function onDragLeave(e) {}
+
+function onDrop(e) {
+  e.preventDefault();
+  dragCount = 0;
+  document.getElementById('drag-over-mask').classList.remove('show');
+  const files = [...e.dataTransfer.files].filter(f => f.type.startsWith('image/'));
+  files.forEach(addFile);
+}
+
+// ─────────────────────────────────────────
+// EXPORT
+// ─────────────────────────────────────────
+async function startExport() {
+  openModal();
+  setModalStatus('Preparing canvas…');
+  setProgress(10);
+
+  // Temporarily hide crop frame and deselect
+  const cf = document.getElementById('crop-frame');
+  cf.style.display = 'none';
+  deselect();
+
+  await sleep(100); // let UI settle
+
+  const scale = parseFloat(document.getElementById('scale-range').value);
+
+  setModalStatus('Rendering map tiles…');
+  setProgress(30);
+
+  try {
+    const stage = document.getElementById('stage');
+    const canvas = await html2canvas(stage, {
+      useCORS: true,
+      allowTaint: true,
+      scale: scale,
+      x: cropX,
+      y: cropY,
+      width:  cropW,
+      height: cropH,
+      windowWidth:  stage.offsetWidth,
+      windowHeight: stage.offsetHeight,
+      logging: false,
+      backgroundColor: '#f2f2f2'
+    });
+
+    setProgress(80);
+    setModalStatus('Compositing overlays…');
+    await sleep(80);
+
+    // Convert to final resolution
+    const targetW = parseInt(document.getElementById('res').value);
+    const [arW, arH] = getAR();
+    const targetH = Math.round(targetW * arH / arW);
+
+    const finalCanvas = document.createElement('canvas');
+    finalCanvas.width  = targetW;
+    finalCanvas.height = targetH;
+    const ctx = finalCanvas.getContext('2d');
+    ctx.drawImage(canvas, 0, 0, targetW, targetH);
+
+    setProgress(95);
+
+    const dataURL = finalCanvas.toDataURL('image/jpeg', 0.95);
+
+    // Show preview
+    const prevImg = document.getElementById('preview-img');
+    prevImg.src = dataURL;
+    document.getElementById('preview-wrap').style.display = 'flex';
+    document.getElementById('modal-btns').style.display   = 'flex';
+    document.getElementById('modal-sub').textContent =
+      `${targetW} × ${targetH} px — ready to download`;
+    setModalStatus('');
+    setProgress(100);
+
+    document.getElementById('btn-dl').onclick = () => {
+      const a = document.createElement('a');
+      a.href     = dataURL;
+      a.download = `dem-oak-map-${Date.now()}.jpg`;
+      a.click();
+    };
+
+  } catch(err) {
+    setModalStatus('Export failed: ' + err.message);
+    console.error(err);
+  }
+
+  // Restore crop frame
+  cf.style.display = 'block';
+}
+
+function openModal() {
+  document.getElementById('modal').classList.add('open');
+  document.getElementById('preview-wrap').style.display = 'none';
+  document.getElementById('modal-btns').style.display   = 'none';
+  document.getElementById('modal-sub').textContent      = 'Capturing map with all overlays…';
+  document.getElementById('modal-status').textContent   = '';
+  document.getElementById('prog-bar').style.display     = 'block';
+  document.getElementById('prog-fill').style.width      = '0%';
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+function setModalStatus(msg) {
+  document.getElementById('modal-status').textContent = msg;
+}
+
+function setProgress(pct) {
+  document.getElementById('prog-fill').style.width = pct + '%';
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+</script>
+</body>
+</html>
