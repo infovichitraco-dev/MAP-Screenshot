@@ -18,445 +18,150 @@
   --gold:     #C9A96E;
 }
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;background:var(--bark2);font-family:'Archivo',sans-serif;color:var(--offwhite);}
 
-html, body {
-  height: 100%;
-  overflow: hidden;
-  background: var(--bark2);
-  font-family: 'Archivo', sans-serif;
-  color: var(--offwhite);
-}
+/* HEADER */
+#header{position:fixed;top:0;left:0;right:0;height:52px;background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:16px;z-index:500;backdrop-filter:blur(8px);}
+.logo{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:300;letter-spacing:0.18em;color:var(--sand);text-transform:uppercase;white-space:nowrap;flex-shrink:0;}
+.logo em{font-style:italic;color:var(--offwhite);}
+.sep{width:1px;height:24px;background:var(--border);flex-shrink:0;}
+.cg{display:flex;align-items:center;gap:7px;flex-shrink:0;}
+.cl{font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);white-space:nowrap;}
+select,input[type="number"]{background:rgba(245,238,230,0.06);border:1px solid var(--border);color:var(--offwhite);font-family:'Archivo',sans-serif;font-size:11px;padding:4px 8px;border-radius:1px;outline:none;cursor:pointer;}
+select option{background:#2a1d12;}
+input[type="number"]{width:62px;}
+input[type="range"]{accent-color:var(--gold);cursor:pointer;}
+.qval{font-size:10px;color:var(--sand);min-width:30px;}
 
-/* ══════════════════════════════════════════
-   HEADER
-══════════════════════════════════════════ */
-#header {
-  position: fixed;
-  top: 0; left: 0; right: 0;
-  height: 52px;
-  background: var(--panel);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  padding: 0 20px;
-  gap: 18px;
-  z-index: 500;
-  backdrop-filter: blur(8px);
-}
+#drop-btn{background:rgba(201,169,110,0.12);border:1px dashed var(--gold);color:var(--gold);font-family:'Archivo',sans-serif;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;padding:5px 14px;cursor:pointer;transition:background 0.15s;white-space:nowrap;flex-shrink:0;}
+#drop-btn:hover{background:rgba(201,169,110,0.22);}
+#file-input{display:none;}
 
-.logo {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 17px;
-  font-weight: 300;
-  letter-spacing: 0.18em;
-  color: var(--sand);
-  text-transform: uppercase;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.logo em { font-style: italic; color: var(--offwhite); }
+#marker-controls{display:none;align-items:center;gap:7px;background:rgba(201,169,110,0.08);border:1px solid rgba(201,169,110,0.25);padding:4px 10px;border-radius:1px;}
+#marker-controls .cl{color:var(--gold);}
+.btn-del{background:rgba(200,60,60,0.15);border:1px solid rgba(200,60,60,0.4);color:#e88;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;padding:3px 8px;cursor:pointer;font-family:'Archivo',sans-serif;}
+.btn-del:hover{background:rgba(200,60,60,0.3);}
 
-.sep { width: 1px; height: 24px; background: var(--border); flex-shrink: 0; }
+#btn-style{background:rgba(226,201,168,0.08);border:1px solid var(--border);color:var(--sand);font-family:'Archivo',sans-serif;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;padding:5px 14px;cursor:pointer;transition:all 0.15s;white-space:nowrap;flex-shrink:0;}
+#btn-style:hover,#btn-style.active{background:rgba(226,201,168,0.18);border-color:var(--sand);color:var(--offwhite);}
 
-/* control groups */
-.cg {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  flex-shrink: 0;
-}
+#btn-export{margin-left:auto;background:var(--sand);color:var(--bark);border:none;padding:8px 22px;font-family:'Archivo',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;transition:background 0.15s;flex-shrink:0;}
+#btn-export:hover{background:var(--offwhite);}
 
-.cl {
-  font-size: 9px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--accent);
-  white-space: nowrap;
-}
+/* STAGE */
+#stage{position:fixed;top:52px;left:0;right:0;bottom:28px;overflow:hidden;transition:right 0.3s ease;}
+#stage.panel-open{right:300px;}
+#map{width:100%;height:100%;}
 
-select, input[type="number"] {
-  background: rgba(245,238,230,0.06);
-  border: 1px solid var(--border);
-  color: var(--offwhite);
-  font-family: 'Archivo', sans-serif;
-  font-size: 11px;
-  padding: 4px 8px;
-  border-radius: 1px;
-  outline: none;
-  cursor: pointer;
-}
-select option { background: #2a1d12; }
-input[type="number"] { width: 62px; }
+/* OVERLAY */
+#overlay-layer{position:absolute;inset:0;pointer-events:none;z-index:10;}
+.map-marker{position:absolute;cursor:grab;user-select:none;pointer-events:all;}
+.map-marker:active{cursor:grabbing;}
+.map-marker img{display:block;width:100%;height:100%;object-fit:contain;pointer-events:none;}
+.map-marker.selected{outline:2px solid var(--gold);outline-offset:2px;}
+.resize-handle{position:absolute;bottom:-5px;right:-5px;width:12px;height:12px;background:var(--gold);cursor:se-resize;border-radius:50%;pointer-events:all;display:none;}
+.map-marker.selected .resize-handle{display:block;}
 
-input[type="range"] {
-  width: 72px;
-  accent-color: var(--gold);
-  cursor: pointer;
-}
+/* CROP FRAME */
+#crop-frame{position:absolute;border:2px solid var(--gold);z-index:20;pointer-events:none;box-shadow:0 0 0 9999px rgba(30,18,10,0.52),inset 0 0 0 1px rgba(201,169,110,0.1);}
+.crop-rule{position:absolute;background:rgba(201,169,110,0.18);pointer-events:none;}
+.cr-v1{top:0;bottom:0;left:33.33%;width:1px;} .cr-v2{top:0;bottom:0;left:66.66%;width:1px;}
+.cr-h1{left:0;right:0;top:33.33%;height:1px;} .cr-h2{left:0;right:0;top:66.66%;height:1px;}
+.ccm{position:absolute;width:16px;height:16px;border-color:var(--gold);border-style:solid;}
+.ccm-tl{top:-2px;left:-2px;border-width:3px 0 0 3px;} .ccm-tr{top:-2px;right:-2px;border-width:3px 3px 0 0;}
+.ccm-bl{bottom:-2px;left:-2px;border-width:0 0 3px 3px;} .ccm-br{bottom:-2px;right:-2px;border-width:0 3px 3px 0;}
+#crop-tag{position:absolute;top:-26px;left:-2px;background:var(--gold);color:var(--bark);font-size:8px;letter-spacing:0.12em;text-transform:uppercase;padding:2px 8px;white-space:nowrap;font-family:'Archivo',sans-serif;font-weight:600;pointer-events:none;}
+#crop-px{position:absolute;bottom:-22px;right:-2px;font-size:9px;color:var(--gold);letter-spacing:0.06em;pointer-events:none;}
 
-.qval {
-  font-size: 10px;
-  color: var(--sand);
-  min-width: 30px;
-}
+/* STYLE PANEL */
+#style-panel{position:fixed;top:52px;right:-300px;width:300px;bottom:28px;background:var(--panel);border-left:1px solid var(--border);z-index:400;overflow-y:auto;transition:right 0.3s ease;scrollbar-width:thin;scrollbar-color:var(--accent) transparent;}
+#style-panel.open{right:0;}
+#style-panel::-webkit-scrollbar{width:4px;}
+#style-panel::-webkit-scrollbar-thumb{background:var(--accent);}
+.sp-head{padding:16px 18px 12px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--panel);z-index:1;}
+.sp-head h3{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:300;letter-spacing:0.1em;color:var(--sand);margin-bottom:2px;}
+.sp-head p{font-size:9px;color:var(--accent);letter-spacing:0.08em;margin-bottom:10px;}
+.sp-acts{display:flex;gap:8px;}
+.sp-act{flex:1;background:rgba(226,201,168,0.08);border:1px solid var(--border);color:var(--sand);font-family:'Archivo',sans-serif;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;padding:5px;cursor:pointer;transition:background 0.15s;}
+.sp-act:hover{background:rgba(226,201,168,0.18);}
+.sp-act.pri{background:var(--sand);color:var(--bark);border-color:var(--sand);font-weight:600;}
+.sp-act.pri:hover{background:var(--offwhite);}
+.sp-sec{padding:14px 18px;border-bottom:1px solid var(--border);}
+.sp-sec-title{font-size:8px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.sp-sec-title::after{content:'';flex:1;height:1px;background:rgba(201,169,110,0.2);}
+.sp-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px;gap:8px;}
+.sp-row:last-child{margin-bottom:0;}
+.sp-lbl{font-size:10px;color:rgba(245,238,230,0.65);flex:1;}
+.spc{display:flex;align-items:center;gap:6px;}
+.spc input[type="color"]{width:28px;height:22px;padding:1px 2px;border:1px solid var(--border);background:transparent;cursor:pointer;border-radius:2px;}
+.spc-hex{font-size:9px;color:var(--accent);font-family:monospace;width:54px;}
+.spt{position:relative;width:32px;height:18px;flex-shrink:0;cursor:pointer;}
+.spt input{opacity:0;width:0;height:0;position:absolute;}
+.spt-track{position:absolute;inset:0;background:rgba(245,238,230,0.1);border-radius:9px;border:1px solid var(--border);transition:background 0.2s;}
+.spt input:checked+.spt-track{background:var(--gold);border-color:var(--gold);}
+.spt-thumb{position:absolute;top:2px;left:2px;width:12px;height:12px;background:rgba(245,238,230,0.35);border-radius:50%;transition:transform 0.2s,background 0.2s;pointer-events:none;}
+.spt input:checked~.spt-thumb{transform:translateX(14px);background:var(--bark);}
+.sps{display:flex;align-items:center;gap:6px;}
+.sps input[type="range"]{width:72px;}
+.sps span{font-size:9px;color:var(--accent);min-width:28px;text-align:right;font-family:monospace;}
 
-/* drop zone button */
-#drop-btn {
-  background: rgba(201,169,110,0.12);
-  border: 1px dashed var(--gold);
-  color: var(--gold);
-  font-family: 'Archivo', sans-serif;
-  font-size: 9px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  padding: 5px 14px;
-  cursor: pointer;
-  transition: background 0.15s;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-#drop-btn:hover { background: rgba(201,169,110,0.22); }
+/* STATUS */
+#statusbar{position:fixed;bottom:0;left:0;right:0;height:28px;background:var(--panel);border-top:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:24px;font-size:9px;letter-spacing:0.08em;color:rgba(226,201,168,0.45);z-index:500;}
+#statusbar b{color:var(--sand);font-weight:400;}
+.sb-hint{margin-left:auto;color:rgba(226,201,168,0.25);}
 
-#file-input { display: none; }
+/* DRAG */
+#drag-mask{display:none;position:fixed;inset:0;background:rgba(201,169,110,0.07);border:3px dashed var(--gold);z-index:900;align-items:center;justify-content:center;flex-direction:column;gap:12px;pointer-events:none;}
+#drag-mask.show{display:flex;}
+#drag-mask p{font-family:'Cormorant Garamond',serif;font-size:28px;font-style:italic;color:var(--gold);}
+#drag-mask small{font-size:11px;letter-spacing:0.1em;color:var(--sand);text-transform:uppercase;}
 
-/* selected marker controls */
-#marker-controls {
-  display: none;
-  align-items: center;
-  gap: 7px;
-  background: rgba(201,169,110,0.08);
-  border: 1px solid rgba(201,169,110,0.25);
-  padding: 4px 10px;
-  border-radius: 1px;
-}
+/* EXPORT MODAL */
+#modal{display:none;position:fixed;inset:0;background:rgba(20,12,6,0.88);z-index:1000;align-items:center;justify-content:center;}
+#modal.open{display:flex;}
+.m-inner{background:var(--offwhite);color:var(--bark);padding:36px;max-width:620px;width:94%;text-align:center;}
+.m-inner h2{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;letter-spacing:0.1em;margin-bottom:6px;}
+.m-sub{font-size:11px;color:var(--accent);margin-bottom:20px;line-height:1.6;}
 
-#marker-controls .cl { color: var(--gold); }
+/* export options grid */
+.exp-opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;text-align:left;}
+.exp-opt-group{display:flex;flex-direction:column;gap:6px;}
+.exp-opt-group label{font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);}
+.exp-opt-group select,.exp-opt-group input{background:rgba(61,43,31,0.06);border:1px solid rgba(61,43,31,0.2);color:var(--bark);font-family:'Archivo',sans-serif;font-size:11px;padding:6px 10px;border-radius:1px;outline:none;width:100%;}
+.exp-opt-group select option{background:var(--offwhite);}
 
-#size-range { width: 60px; accent-color: var(--gold); }
-#size-val { font-size: 10px; color: var(--sand); min-width: 28px; }
+.exp-info{background:rgba(61,43,31,0.05);border:1px solid rgba(61,43,31,0.1);padding:10px 14px;margin-bottom:18px;font-size:10px;color:var(--accent);line-height:1.7;text-align:left;}
+.exp-info b{color:var(--bark);}
 
-.btn-del {
-  background: rgba(200,60,60,0.15);
-  border: 1px solid rgba(200,60,60,0.4);
-  color: #e88;
-  font-size: 9px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 3px 8px;
-  cursor: pointer;
-  font-family: 'Archivo', sans-serif;
-}
+#prev-wrap{border:1px solid rgba(61,43,31,0.18);overflow:hidden;max-height:280px;display:flex;align-items:center;justify-content:center;background:#ddd;margin-bottom:16px;}
+#prev-wrap img{max-width:100%;max-height:280px;}
+#m-status{font-size:11px;color:var(--accent);margin-bottom:12px;min-height:18px;}
 
-.btn-del:hover { background: rgba(200,60,60,0.3); }
+/* progress */
+#prog{height:3px;background:rgba(61,43,31,0.1);margin-bottom:16px;display:none;border-radius:2px;overflow:hidden;}
+#prog-f{height:100%;background:linear-gradient(90deg,var(--bark),var(--accent));width:0%;transition:width 0.4s;}
+#prog-label{font-size:9px;color:var(--accent);letter-spacing:0.08em;margin-bottom:12px;display:none;text-align:center;}
 
-/* export button */
-#btn-export {
-  margin-left: auto;
-  background: var(--sand);
-  color: var(--bark);
-  border: none;
-  padding: 8px 22px;
-  font-family: 'Archivo', sans-serif;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: background 0.15s;
-  flex-shrink: 0;
-}
-#btn-export:hover { background: var(--offwhite); }
+/* tile grid preview */
+#tile-grid{display:none;gap:2px;margin-bottom:16px;justify-content:center;}
+.tile-cell{background:rgba(61,43,31,0.1);border:1px solid rgba(61,43,31,0.15);border-radius:1px;display:flex;align-items:center;justify-content:center;font-size:8px;color:rgba(61,43,31,0.4);font-family:monospace;transition:background 0.2s;}
+.tile-cell.loading{background:rgba(61,43,31,0.08);animation:pulse 1s infinite;}
+.tile-cell.done{background:rgba(61,43,31,0.15);}
+@keyframes pulse{0%,100%{opacity:0.5;}50%{opacity:1;}}
 
-/* ══════════════════════════════════════════
-   MAIN CANVAS AREA
-══════════════════════════════════════════ */
-#stage {
-  position: fixed;
-  top: 52px; left: 0; right: 0; bottom: 28px;
-  overflow: hidden;
-}
-
-#map {
-  width: 100%;
-  height: 100%;
-}
-
-/* ══════════════════════════════════════════
-   PNG OVERLAY LAYER
-══════════════════════════════════════════ */
-#overlay-layer {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 10;
-}
-
-/* individual marker overlay */
-.map-marker {
-  position: absolute;
-  cursor: grab;
-  user-select: none;
-  pointer-events: all;
-  transform-origin: center center;
-}
-
-.map-marker:active { cursor: grabbing; }
-
-.map-marker img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  pointer-events: none;
-  border-radius: 2px;
-}
-
-.map-marker.selected {
-  outline: 2px solid var(--gold);
-  outline-offset: 2px;
-}
-
-/* resize handle */
-.resize-handle {
-  position: absolute;
-  bottom: -5px;
-  right: -5px;
-  width: 12px;
-  height: 12px;
-  background: var(--gold);
-  cursor: se-resize;
-  border-radius: 50%;
-  pointer-events: all;
-  display: none;
-}
-
-.map-marker.selected .resize-handle { display: block; }
-
-/* ══════════════════════════════════════════
-   CROP FRAME
-══════════════════════════════════════════ */
-#crop-frame {
-  position: absolute;
-  border: 2px solid var(--gold);
-  z-index: 20;
-  pointer-events: none;
-  box-shadow:
-    0 0 0 9999px rgba(30,18,10,0.52),
-    inset 0 0 0 1px rgba(201,169,110,0.15);
-}
-
-.crop-rule {
-  position: absolute;
-  background: rgba(201,169,110,0.2);
-  pointer-events: none;
-}
-/* rule thirds */
-.cr-v1 { top: 0; bottom: 0; left: 33.33%; width: 1px; }
-.cr-v2 { top: 0; bottom: 0; left: 66.66%; width: 1px; }
-.cr-h1 { left: 0; right: 0; top: 33.33%; height: 1px; }
-.cr-h2 { left: 0; right: 0; top: 66.66%; height: 1px; }
-
-.crop-corner-mark {
-  position: absolute;
-  width: 16px;
-  height: 16px;
-  border-color: var(--gold);
-  border-style: solid;
-}
-.ccm-tl { top: -2px; left: -2px; border-width: 3px 0 0 3px; }
-.ccm-tr { top: -2px; right: -2px; border-width: 3px 3px 0 0; }
-.ccm-bl { bottom: -2px; left: -2px; border-width: 0 0 3px 3px; }
-.ccm-br { bottom: -2px; right: -2px; border-width: 0 3px 3px 0; }
-
-#crop-tag {
-  position: absolute;
-  top: -26px;
-  left: -2px;
-  background: var(--gold);
-  color: var(--bark);
-  font-size: 8px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  padding: 2px 8px;
-  white-space: nowrap;
-  font-family: 'Archivo', sans-serif;
-  font-weight: 600;
-  pointer-events: none;
-}
-
-#crop-px {
-  position: absolute;
-  bottom: -22px;
-  right: -2px;
-  font-size: 9px;
-  color: var(--gold);
-  letter-spacing: 0.06em;
-  pointer-events: none;
-  font-family: 'Archivo', sans-serif;
-}
-
-/* ══════════════════════════════════════════
-   STATUS BAR
-══════════════════════════════════════════ */
-#statusbar {
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  height: 28px;
-  background: var(--panel);
-  border-top: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  padding: 0 20px;
-  gap: 24px;
-  font-size: 9px;
-  letter-spacing: 0.08em;
-  color: rgba(226,201,168,0.45);
-  z-index: 500;
-}
-
-#statusbar b { color: var(--sand); font-weight: 400; }
-
-.sb-hint { margin-left: auto; color: rgba(226,201,168,0.28); }
-
-/* ══════════════════════════════════════════
-   DRAG-OVER INDICATOR
-══════════════════════════════════════════ */
-#drag-over-mask {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(201,169,110,0.08);
-  border: 3px dashed var(--gold);
-  z-index: 900;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 12px;
-  pointer-events: none;
-}
-#drag-over-mask.show { display: flex; }
-#drag-over-mask p {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 28px;
-  font-style: italic;
-  color: var(--gold);
-  letter-spacing: 0.06em;
-}
-#drag-over-mask small {
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  color: var(--sand);
-  text-transform: uppercase;
-}
-
-/* ══════════════════════════════════════════
-   EXPORT MODAL
-══════════════════════════════════════════ */
-#modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(20,12,6,0.88);
-  z-index: 1000;
-  align-items: center;
-  justify-content: center;
-}
-#modal.open { display: flex; }
-
-.modal-inner {
-  background: var(--offwhite);
-  color: var(--bark);
-  padding: 36px;
-  max-width: 580px;
-  width: 92%;
-  text-align: center;
-}
-
-.modal-inner h2 {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 22px;
-  font-weight: 300;
-  letter-spacing: 0.1em;
-  margin-bottom: 6px;
-}
-
-.modal-inner .sub {
-  font-size: 11px;
-  color: var(--accent);
-  margin-bottom: 20px;
-  line-height: 1.6;
-}
-
-#preview-wrap {
-  border: 1px solid rgba(61,43,31,0.18);
-  overflow: hidden;
-  max-height: 320px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #ddd;
-  margin-bottom: 20px;
-}
-#preview-wrap img { max-width: 100%; max-height: 320px; }
-
-#modal-status {
-  font-size: 11px;
-  color: var(--accent);
-  margin-bottom: 16px;
-  min-height: 18px;
-}
-
-.modal-btns { display: flex; gap: 12px; justify-content: center; }
-
-.btn-primary {
-  background: var(--bark);
-  color: var(--offwhite);
-  border: none;
-  padding: 10px 28px;
-  font-family: 'Archivo', sans-serif;
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-
-.btn-secondary {
-  background: transparent;
-  border: 1px solid var(--bark);
-  color: var(--bark);
-  padding: 10px 28px;
-  font-family: 'Archivo', sans-serif;
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-
-/* progress bar */
-#prog-bar {
-  height: 2px;
-  background: rgba(61,43,31,0.1);
-  margin-bottom: 16px;
-  overflow: hidden;
-  display: none;
-}
-#prog-fill {
-  height: 100%;
-  background: var(--bark);
-  width: 0%;
-  transition: width 0.3s;
-}
+.m-btns{display:flex;gap:12px;justify-content:center;}
+.btn-p{background:var(--bark);color:var(--offwhite);border:none;padding:10px 28px;font-family:'Archivo',sans-serif;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;}
+.btn-p:hover{background:#5a3d2b;}
+.btn-s{background:transparent;border:1px solid var(--bark);color:var(--bark);padding:10px 28px;font-family:'Archivo',sans-serif;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;}
 </style>
 </head>
 <body>
 
-<!-- ══ HEADER ══ -->
+<!-- HEADER -->
 <div id="header">
   <div class="logo">DEM <em>Oak</em></div>
   <div class="sep"></div>
-
-  <!-- Aspect -->
   <div class="cg">
     <span class="cl">Aspect</span>
     <select id="aspect" onchange="onAspectChange()">
@@ -470,527 +175,683 @@ input[type="range"] {
       <option value="custom">Custom…</option>
     </select>
     <span id="cw-wrap" style="display:none;align-items:center;gap:4px">
-      <input type="number" id="cw" value="1920" min="200" max="6000" placeholder="W" oninput="onAspectChange()">
+      <input type="number" id="cw" value="1920" min="200" max="6000" oninput="onAspectChange()">
       <span style="font-size:10px;color:var(--accent)">×</span>
-      <input type="number" id="ch" value="1080" min="200" max="6000" placeholder="H" oninput="onAspectChange()">
+      <input type="number" id="ch" value="1080" min="200" max="6000" oninput="onAspectChange()">
     </span>
   </div>
-
   <div class="sep"></div>
-
-  <!-- Resolution -->
-  <div class="cg">
-    <span class="cl">Export W</span>
-    <select id="res">
-      <option value="1280">1280 px</option>
-      <option value="1920" selected>1920 px</option>
-      <option value="2560">2560 px</option>
-      <option value="3840">3840 px (4K)</option>
-    </select>
-  </div>
-
-  <!-- Scale for html2canvas -->
-  <div class="cg">
-    <span class="cl">Scale</span>
-    <input type="range" id="scale-range" min="1" max="4" step="0.5" value="2" oninput="document.getElementById('scale-val').textContent=this.value+'×'">
-    <span class="qval" id="scale-val">2×</span>
-  </div>
-
-  <div class="sep"></div>
-
-  <!-- Add PNG -->
-  <button id="drop-btn" onclick="document.getElementById('file-input').click()">+ Drop / Add PNG</button>
-  <input type="file" id="file-input" accept="image/png,image/svg+xml,image/webp,image/jpeg" multiple onchange="onFileSelect(this)">
-
-  <!-- Selected marker controls -->
+  <button id="drop-btn" onclick="document.getElementById('file-input').click()">+ Add PNG</button>
+  <input type="file" id="file-input" accept="image/*" multiple onchange="onFileSelect(this)">
   <div id="marker-controls">
-    <span class="cl">Size</span>
-    <input type="range" id="size-range" min="20" max="400" value="80" oninput="onResizeSlider(this.value)">
+    <span class="cl" style="color:var(--gold)">Size</span>
+    <input type="range" id="size-range" min="20" max="400" value="80" oninput="onResizeSlider(this.value)" style="width:60px">
     <span id="size-val" class="qval">80px</span>
     <button class="btn-del" onclick="deleteSelected()">Remove</button>
   </div>
-
-  <button id="btn-export" onclick="startExport()">Export Map</button>
+  <div class="sep"></div>
+  <button id="btn-style" onclick="togglePanel()">&#9783; Style</button>
+  <button id="btn-export" onclick="openExportModal()">Export Map</button>
 </div>
 
-<!-- ══ STAGE ══ -->
-<div id="stage"
-  ondragover="onDragOver(event)"
-  ondragleave="onDragLeave(event)"
-  ondrop="onDrop(event)">
-
+<!-- STAGE -->
+<div id="stage" ondragover="onDragOver(event)" ondrop="onDrop(event)">
   <div id="map"></div>
-
-  <!-- PNG overlays live here -->
   <div id="overlay-layer"></div>
-
-  <!-- Crop frame -->
   <div id="crop-frame">
     <div id="crop-tag">Export Frame — pan &amp; zoom map inside</div>
-    <div class="crop-rule cr-v1"></div>
-    <div class="crop-rule cr-v2"></div>
-    <div class="crop-rule cr-h1"></div>
-    <div class="crop-rule cr-h2"></div>
-    <div class="crop-corner-mark ccm-tl"></div>
-    <div class="crop-corner-mark ccm-tr"></div>
-    <div class="crop-corner-mark ccm-bl"></div>
-    <div class="crop-corner-mark ccm-br"></div>
+    <div class="crop-rule cr-v1"></div><div class="crop-rule cr-v2"></div>
+    <div class="crop-rule cr-h1"></div><div class="crop-rule cr-h2"></div>
+    <div class="ccm ccm-tl"></div><div class="ccm ccm-tr"></div>
+    <div class="ccm ccm-bl"></div><div class="ccm ccm-br"></div>
     <div id="crop-px"></div>
   </div>
 </div>
 
-<!-- ══ DRAG OVER MASK ══ -->
-<div id="drag-over-mask">
-  <p>Drop your PNG here</p>
-  <small>It will appear on the map — drag &amp; resize freely</small>
+<!-- STYLE PANEL -->
+<div id="style-panel">
+  <div class="sp-head">
+    <h3>Style Editor</h3>
+    <p>Edits apply live to the map</p>
+    <div class="sp-acts">
+      <button class="sp-act" onclick="resetStyle()">Reset</button>
+      <button class="sp-act pri" onclick="copyJSON()">Copy JSON</button>
+    </div>
+  </div>
+  <div class="sp-sec">
+    <div class="sp-sec-title">Colors</div>
+    <div class="sp-row"><span class="sp-lbl">Land / Background</span><div class="spc"><input type="color" id="c-land" value="#f2f2f2" oninput="onColor('land',this.value)"><span class="spc-hex" id="h-land">#f2f2f2</span></div></div>
+    <div class="sp-row"><span class="sp-lbl">Water</span><div class="spc"><input type="color" id="c-water" value="#3a2d1c" oninput="onColor('water',this.value)"><span class="spc-hex" id="h-water">#3a2d1c</span></div></div>
+    <div class="sp-row"><span class="sp-lbl">Road Fill</span><div class="spc"><input type="color" id="c-road" value="#d4d4d4" oninput="onColor('road',this.value)"><span class="spc-hex" id="h-road">#d4d4d4</span></div></div>
+    <div class="sp-row"><span class="sp-lbl">Road Labels</span><div class="spc"><input type="color" id="c-roadlabel" value="#444444" oninput="onColor('roadlabel',this.value)"><span class="spc-hex" id="h-roadlabel">#444444</span></div></div>
+    <div class="sp-row"><span class="sp-lbl">Admin Labels</span><div class="spc"><input type="color" id="c-admin" value="#444444" oninput="onColor('admin',this.value)"><span class="spc-hex" id="h-admin">#444444</span></div></div>
+  </div>
+  <div class="sp-sec">
+    <div class="sp-sec-title">Visibility</div>
+    <div class="sp-row"><span class="sp-lbl">All Labels</span><label class="spt"><input type="checkbox" id="v-alllabels" checked onchange="onVis()"><div class="spt-track"></div><div class="spt-thumb"></div></label></div>
+    <div class="sp-row"><span class="sp-lbl">Admin / Area Labels</span><label class="spt"><input type="checkbox" id="v-admin" onchange="onVis()"><div class="spt-track"></div><div class="spt-thumb"></div></label></div>
+    <div class="sp-row"><span class="sp-lbl">Local / Inner Roads</span><label class="spt"><input type="checkbox" id="v-local" onchange="onVis()"><div class="spt-track"></div><div class="spt-thumb"></div></label></div>
+    <div class="sp-row"><span class="sp-lbl">Arterial Roads</span><label class="spt"><input type="checkbox" id="v-arterial" checked onchange="onVis()"><div class="spt-track"></div><div class="spt-thumb"></div></label></div>
+    <div class="sp-row"><span class="sp-lbl">Highways</span><label class="spt"><input type="checkbox" id="v-highway" checked onchange="onVis()"><div class="spt-track"></div><div class="spt-thumb"></div></label></div>
+    <div class="sp-row"><span class="sp-lbl">Road Labels</span><label class="spt"><input type="checkbox" id="v-roadlabel" checked onchange="onVis()"><div class="spt-track"></div><div class="spt-thumb"></div></label></div>
+    <div class="sp-row"><span class="sp-lbl">POIs</span><label class="spt"><input type="checkbox" id="v-poi" onchange="onVis()"><div class="spt-track"></div><div class="spt-thumb"></div></label></div>
+    <div class="sp-row"><span class="sp-lbl">Transit</span><label class="spt"><input type="checkbox" id="v-transit" onchange="onVis()"><div class="spt-track"></div><div class="spt-thumb"></div></label></div>
+    <div class="sp-row"><span class="sp-lbl">Rail Stations</span><label class="spt"><input type="checkbox" id="v-rail" checked onchange="onVis()"><div class="spt-track"></div><div class="spt-thumb"></div></label></div>
+  </div>
+  <div class="sp-sec">
+    <div class="sp-sec-title">Fine Adjustments</div>
+    <div class="sp-row"><span class="sp-lbl">Water Lightness</span><div class="sps"><input type="range" id="a-wl" min="-100" max="100" value="23" oninput="onAdj()"><span id="av-wl">23</span></div></div>
+    <div class="sp-row"><span class="sp-lbl">Water Saturation</span><div class="sps"><input type="range" id="a-ws" min="-100" max="100" value="-39" oninput="onAdj()"><span id="av-ws">-39</span></div></div>
+    <div class="sp-row"><span class="sp-lbl">Road Lightness</span><div class="sps"><input type="range" id="a-rl" min="-100" max="100" value="45" oninput="onAdj()"><span id="av-rl">45</span></div></div>
+    <div class="sp-row"><span class="sp-lbl">Road Saturation</span><div class="sps"><input type="range" id="a-rs" min="-100" max="100" value="-100" oninput="onAdj()"><span id="av-rs">-100</span></div></div>
+  </div>
 </div>
 
-<!-- ══ STATUS BAR ══ -->
+<!-- DRAG MASK -->
+<div id="drag-mask">
+  <p>Drop PNG onto map</p>
+  <small>Drag &amp; resize freely</small>
+</div>
+
+<!-- STATUS BAR -->
 <div id="statusbar">
-  <span>Center <b id="sb-center">—</b></span>
-  <span>Zoom <b id="sb-zoom">—</b></span>
-  <span>Markers <b id="sb-markers">0</b></span>
-  <span class="sb-hint">Drag PNGs from desktop onto the map &nbsp;·&nbsp; Click marker to select &nbsp;·&nbsp; Scroll to resize selected</span>
+  <span>Center <b id="sb-c">—</b></span>
+  <span>Zoom <b id="sb-z">—</b></span>
+  <span>Markers <b id="sb-m">0</b></span>
+  <span class="sb-hint">Drag PNGs from desktop · Click to select · Scroll to resize · Style panel for colors &amp; visibility</span>
 </div>
 
-<!-- ══ EXPORT MODAL ══ -->
+<!-- EXPORT MODAL -->
 <div id="modal">
-  <div class="modal-inner">
-    <h2>Export Preview</h2>
-    <p class="sub" id="modal-sub">Capturing map with overlays…</p>
-    <div id="prog-bar"><div id="prog-fill"></div></div>
-    <div id="preview-wrap" style="display:none"><img id="preview-img" src="" alt=""></div>
-    <div id="modal-status"></div>
-    <div class="modal-btns" id="modal-btns" style="display:none">
-      <button class="btn-primary" id="btn-dl">Download</button>
-      <button class="btn-secondary" onclick="closeModal()">Close</button>
+  <div class="m-inner">
+    <h2 id="m-title">Export Settings</h2>
+    <p class="m-sub" id="m-sub">Choose your export quality and format — tile stitching renders from Google's servers, so zoom in as much as you want on the exported file.</p>
+
+    <!-- OPTIONS — shown before export starts -->
+    <div id="exp-options">
+      <div class="exp-opts">
+        <div class="exp-opt-group">
+          <label>Tile Grid</label>
+          <select id="opt-grid">
+            <option value="1x1">1 × 1 — Quick preview (~1280px)</option>
+            <option value="2x2">2 × 2 — High res (~2560px)</option>
+            <option value="3x2" selected>3 × 2 — Very high res (~3840px)</option>
+            <option value="4x3">4 × 3 — Ultra (~5120px)</option>
+            <option value="4x4">4 × 4 — Maximum (~7680px)</option>
+          </select>
+        </div>
+        <div class="exp-opt-group">
+          <label>Format</label>
+          <select id="opt-format">
+            <option value="png">PNG — Lossless, largest file</option>
+            <option value="jpeg" selected>JPEG — Smallest file, 95% quality</option>
+            <option value="pdf">PDF — Embeds PNG inside PDF</option>
+          </select>
+        </div>
+        <div class="exp-opt-group">
+          <label>Map Zoom for Tiles</label>
+          <select id="opt-zoom">
+            <option value="same">Same as current map view</option>
+            <option value="plus1">+1 zoom (more detail)</option>
+            <option value="plus2">+2 zoom (maximum detail)</option>
+          </select>
+        </div>
+        <div class="exp-opt-group">
+          <label>Tile Scale</label>
+          <select id="opt-scale">
+            <option value="1">1× — Standard</option>
+            <option value="2" selected>2× — Retina (recommended)</option>
+          </select>
+        </div>
+      </div>
+      <div class="exp-info" id="exp-info-box">
+        Select options above — resolution preview will appear here.
+      </div>
+      <div class="m-btns">
+        <button class="btn-p" onclick="startTileExport()">Generate Export</button>
+        <button class="btn-s" onclick="closeModal()">Cancel</button>
+      </div>
+    </div>
+
+    <!-- PROGRESS — shown during export -->
+    <div id="exp-progress" style="display:none">
+      <div id="tile-grid" style="display:grid"></div>
+      <div id="prog"><div id="prog-f"></div></div>
+      <div id="prog-label"></div>
+      <div id="m-status"></div>
+    </div>
+
+    <!-- RESULT — shown when done -->
+    <div id="exp-result" style="display:none">
+      <div id="prev-wrap" style="display:none"><img id="prev-img" src="" alt=""></div>
+      <div class="m-btns" id="m-btns">
+        <button class="btn-p" id="btn-dl">Download</button>
+        <button class="btn-s" onclick="resetModal()">Export Again</button>
+        <button class="btn-s" onclick="closeModal()">Close</button>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- ══ html2canvas ══ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
 <script>
-// ─────────────────────────────────────────
-// CONSTANTS
-// ─────────────────────────────────────────
+// ── CONFIG ──────────────────────────────────────────────
 const API_KEY = 'AIzaSyBLzi_xut6Y6lgShdOkPCePTXreCqUBJVo';
-const CENTER  = { lat: 19.2330, lng: 72.8580 }; // Gorai 1, Borivali West
+const CENTER  = { lat: 19.2330, lng: 72.8580 };
 const ZOOM    = 14;
+const ASPECTS = { '16:9':[16,9],'4:3':[4,3],'3:2':[3,2],'1:1':[1,1],'2:1':[2,1],'A4L':[297,210],'A4P':[210,297] };
+const TILE_SIZE = 640; // Static API max px per side before scale
 
-const MAP_STYLE = [{"featureType":"administrative","elementType":"labels.text.fill","stylers":[{"color":"#444444"}]},{"featureType":"administrative.country","elementType":"all","stylers":[{"visibility":"off"}]},{"featureType":"administrative.province","elementType":"all","stylers":[{"visibility":"off"}]},{"featureType":"administrative.locality","elementType":"all","stylers":[{"visibility":"off"}]},{"featureType":"administrative.neighborhood","elementType":"all","stylers":[{"visibility":"off"}]},{"featureType":"administrative.land_parcel","elementType":"all","stylers":[{"visibility":"off"}]},{"featureType":"landscape","elementType":"all","stylers":[{"color":"#f2f2f2"},{"visibility":"on"}]},{"featureType":"poi","elementType":"all","stylers":[{"visibility":"off"}]},{"featureType":"poi.medical","elementType":"all","stylers":[{"visibility":"off"}]},{"featureType":"road","elementType":"all","stylers":[{"saturation":-100},{"lightness":45}]},{"featureType":"road.highway","elementType":"all","stylers":[{"visibility":"simplified"}]},{"featureType":"road.arterial","elementType":"all","stylers":[{"visibility":"on"}]},{"featureType":"road.arterial","elementType":"labels.text","stylers":[{"visibility":"on"}]},{"featureType":"road.arterial","elementType":"labels.icon","stylers":[{"visibility":"off"}]},{"featureType":"road.local","elementType":"all","stylers":[{"visibility":"off"}]},{"featureType":"road.local","elementType":"labels.text","stylers":[{"visibility":"off"}]},{"featureType":"transit","elementType":"all","stylers":[{"visibility":"off"}]},{"featureType":"transit.station.rail","elementType":"all","stylers":[{"visibility":"on"}]},{"featureType":"water","elementType":"all","stylers":[{"color":"#3a2d1c"},{"visibility":"on"},{"saturation":"-39"},{"lightness":"23"},{"weight":"0.01"}]}];
+// ── STYLE STATE ─────────────────────────────────────────
+let SC = { land:'#f2f2f2', water:'#3a2d1c', road:'#d4d4d4', roadlabel:'#444444', admin:'#444444' };
+let SA = { wl:23, ws:-39, rl:45, rs:-100 };
+let SV = { alllabels:true, admin:false, local:false, arterial:true, highway:true, roadlabel:true, poi:false, transit:false, rail:true };
+const SC0={...SC}, SA0={...SA}, SV0={...SV};
 
-const ASPECTS = {
-  '16:9': [16,9], '4:3': [4,3], '3:2': [3,2],
-  '1:1':  [1,1],  '2:1': [2,1],
-  'A4L':  [297,210], 'A4P': [210,297]
-};
-
-// ─────────────────────────────────────────
-// STATE
-// ─────────────────────────────────────────
-let map;
-let markers    = [];      // { el, img, x, y, w, h }
-let selected   = null;
-let cropX = 0, cropY = 0, cropW = 0, cropH = 0;
-
-// ─────────────────────────────────────────
-// MAP INIT
-// ─────────────────────────────────────────
-function initMap() {
-  map = new google.maps.Map(document.getElementById('map'), {
-    center: CENTER,
-    zoom: ZOOM,
-    styles: MAP_STYLE,
-    mapTypeControl: false,
-    streetViewControl: false,
-    fullscreenControl: false,
-    zoomControlOptions: { position: google.maps.ControlPosition.RIGHT_CENTER },
-    gestureHandling: 'greedy'
-  });
-
-  map.addListener('center_changed', updateStatus);
-  map.addListener('zoom_changed',   updateStatus);
-
-  // click on map deselects
-  map.addListener('click', () => deselect());
-
-  // Wait for map tiles to settle then init crop
-  google.maps.event.addListenerOnce(map, 'idle', () => {
-    initCrop();
-    updateStatus();
-  });
+function buildStyle() {
+  const s=[];
+  s.push({featureType:'administrative',elementType:'labels.text.fill',stylers:[{color:SC.admin}]});
+  ['country','province','locality','neighborhood','land_parcel'].forEach(t=>
+    s.push({featureType:`administrative.${t}`,elementType:'all',stylers:[{visibility:SV.admin?'on':'off'}]}));
+  if(!SV.alllabels) s.push({elementType:'labels',stylers:[{visibility:'off'}]});
+  s.push({featureType:'landscape',elementType:'all',stylers:[{color:SC.land},{visibility:'on'}]});
+  s.push({featureType:'poi',elementType:'all',stylers:[{visibility:SV.poi?'on':'off'}]});
+  s.push({featureType:'road',elementType:'all',stylers:[{saturation:SA.rs},{lightness:SA.rl}]});
+  s.push({featureType:'road',elementType:'geometry.fill',stylers:[{color:SC.road}]});
+  s.push({featureType:'road.highway',elementType:'all',stylers:[{visibility:SV.highway?'simplified':'off'}]});
+  s.push({featureType:'road.arterial',elementType:'all',stylers:[{visibility:SV.arterial?'on':'off'}]});
+  s.push({featureType:'road.arterial',elementType:'labels.text',stylers:[{visibility:SV.roadlabel&&SV.arterial?'on':'off'},{color:SC.roadlabel}]});
+  s.push({featureType:'road.arterial',elementType:'labels.icon',stylers:[{visibility:'off'}]});
+  s.push({featureType:'road.local',elementType:'all',stylers:[{visibility:SV.local?'on':'off'}]});
+  s.push({featureType:'road.local',elementType:'labels.text',stylers:[{visibility:SV.local&&SV.roadlabel?'on':'off'},{color:SC.roadlabel}]});
+  s.push({featureType:'transit',elementType:'all',stylers:[{visibility:SV.transit?'on':'off'}]});
+  s.push({featureType:'transit.station.rail',elementType:'all',stylers:[{visibility:SV.rail?'on':'off'}]});
+  s.push({featureType:'water',elementType:'all',stylers:[{color:SC.water},{visibility:'on'},{saturation:SA.ws},{lightness:SA.wl}]});
+  return s;
 }
 
-// Load Maps JS API
-(function() {
-  const s = document.createElement('script');
-  s.src = `https://maps.googleapis.com/maps/api/js?key=${API_KEY}&callback=initMap`;
-  s.async = true;
-  document.head.appendChild(s);
-})();
+function styleToParams(styleArr) {
+  // Convert style array to Static API URL params
+  return styleArr.map(rule => {
+    let parts = [];
+    if (rule.featureType) parts.push('feature:' + rule.featureType);
+    if (rule.elementType) parts.push('element:' + rule.elementType);
+    if (rule.stylers) rule.stylers.forEach(st => Object.entries(st).forEach(([k,v]) => {
+      parts.push(k + ':' + (typeof v==='string'? v.replace('#','0x') : v));
+    }));
+    return 'style=' + encodeURIComponent(parts.join('|'));
+  }).join('&');
+}
 
-// ─────────────────────────────────────────
-// CROP FRAME
-// ─────────────────────────────────────────
-function initCrop() {
-  const stage = document.getElementById('stage');
-  const sw = stage.offsetWidth;
-  const sh = stage.offsetHeight;
-  const [arW, arH] = getAR();
+function applyStyle() { if(map) map.setOptions({styles:buildStyle()}); }
+function onColor(k,v){ SC[k]=v; document.getElementById('h-'+k).textContent=v; applyStyle(); }
+function onVis(){ Object.keys(SV).forEach(k=>{ const el=document.getElementById('v-'+k); if(el) SV[k]=el.checked; }); applyStyle(); }
+function onAdj(){ [['wl','a-wl'],['ws','a-ws'],['rl','a-rl'],['rs','a-rs']].forEach(([k,id])=>{ const el=document.getElementById(id); if(el){SA[k]=parseInt(el.value);document.getElementById('av-'+k).textContent=el.value;} }); applyStyle(); }
 
-  let w = sw * 0.74;
-  let h = w * arH / arW;
-  if (h > sh * 0.80) { h = sh * 0.80; w = h * arW / arH; }
+function resetStyle(){
+  Object.assign(SC,SC0);Object.assign(SA,SA0);Object.assign(SV,SV0);
+  Object.entries(SC).forEach(([k,v])=>{ const ci=document.getElementById('c-'+k),hi=document.getElementById('h-'+k); if(ci)ci.value=v;if(hi)hi.textContent=v; });
+  [['wl',23],['ws',-39],['rl',45],['rs',-100]].forEach(([k,v])=>{ const el=document.getElementById('a-'+k),av=document.getElementById('av-'+k); if(el)el.value=v;if(av)av.textContent=v; });
+  Object.entries(SV).forEach(([k,v])=>{ const el=document.getElementById('v-'+k); if(el)el.checked=v; });
+  applyStyle();
+}
 
-  cropW = Math.round(w);
-  cropH = Math.round(h);
-  cropX = Math.round((sw - cropW) / 2);
-  cropY = Math.round((sh - cropH) / 2);
+function copyJSON(){ navigator.clipboard.writeText(JSON.stringify(buildStyle(),null,2)).then(()=>{ const b=event.target;b.textContent='Copied!';setTimeout(()=>b.textContent='Copy JSON',1500); }); }
 
+// ── PANEL ────────────────────────────────────────────────
+let panelOpen=false;
+function togglePanel(){
+  panelOpen=!panelOpen;
+  document.getElementById('style-panel').classList.toggle('open',panelOpen);
+  document.getElementById('stage').classList.toggle('panel-open',panelOpen);
+  document.getElementById('btn-style').classList.toggle('active',panelOpen);
+  setTimeout(()=>{ if(map)google.maps.event.trigger(map,'resize');initCrop(); },320);
+}
+
+// ── MAP ──────────────────────────────────────────────────
+let map, markers=[], selected=null;
+let cropX=0,cropY=0,cropW=0,cropH=0;
+
+function initMap(){
+  map=new google.maps.Map(document.getElementById('map'),{
+    center:CENTER,zoom:ZOOM,styles:buildStyle(),
+    mapTypeControl:false,streetViewControl:false,
+    fullscreenControl:false,gestureHandling:'greedy',
+    zoomControlOptions:{position:google.maps.ControlPosition.RIGHT_CENTER}
+  });
+  map.addListener('center_changed',updateStatus);
+  map.addListener('zoom_changed',()=>{ updateStatus(); updateExportInfo(); });
+  map.addListener('click',()=>deselect());
+  google.maps.event.addListenerOnce(map,'idle',()=>{ initCrop(); updateStatus(); });
+}
+
+(function(){ const s=document.createElement('script'); s.src=`https://maps.googleapis.com/maps/api/js?key=${API_KEY}&callback=initMap`; s.async=true; document.head.appendChild(s); })();
+
+// ── CROP ─────────────────────────────────────────────────
+function initCrop(){
+  const st=document.getElementById('stage');
+  const sw=st.offsetWidth,sh=st.offsetHeight;
+  const [arW,arH]=getAR();
+  let w=sw*0.74,h=w*arH/arW;
+  if(h>sh*0.80){h=sh*0.80;w=h*arW/arH;}
+  cropW=Math.round(w);cropH=Math.round(h);
+  cropX=Math.round((sw-cropW)/2);cropY=Math.round((sh-cropH)/2);
   placeCrop();
 }
 
-function placeCrop() {
-  const cf = document.getElementById('crop-frame');
-  cf.style.left   = cropX + 'px';
-  cf.style.top    = cropY + 'px';
-  cf.style.width  = cropW + 'px';
-  cf.style.height = cropH + 'px';
-
-  const res = parseInt(document.getElementById('res').value);
-  const [arW, arH] = getAR();
-  const expH = Math.round(res * arH / arW);
-  document.getElementById('crop-px').textContent = `${res} × ${expH} px`;
+function placeCrop(){
+  const cf=document.getElementById('crop-frame');
+  cf.style.left=cropX+'px';cf.style.top=cropY+'px';cf.style.width=cropW+'px';cf.style.height=cropH+'px';
+  updateCropLabel();
 }
 
-function getAR() {
-  const v = document.getElementById('aspect').value;
-  if (v === 'custom') {
-    return [
-      parseInt(document.getElementById('cw').value) || 1920,
-      parseInt(document.getElementById('ch').value) || 1080
-    ];
-  }
+function updateCropLabel(){
+  // Show estimated output px based on current grid selection
+  const grid=document.getElementById('opt-grid');
+  if(!grid){document.getElementById('crop-px').textContent='';return;}
+  const {cols,rows}=parseGrid(grid.value);
+  const scale=parseInt(document.getElementById('opt-scale')?document.getElementById('opt-scale').value:2);
+  const tw=cols*TILE_SIZE*scale, th=rows*TILE_SIZE*scale;
+  document.getElementById('crop-px').textContent=`~${tw}×${th}px`;
+}
+
+function getAR(){
+  const v=document.getElementById('aspect').value;
+  if(v==='custom') return [parseInt(document.getElementById('cw').value)||1920,parseInt(document.getElementById('ch').value)||1080];
   return ASPECTS[v];
 }
 
-function onAspectChange() {
-  const v = document.getElementById('aspect').value;
-  document.getElementById('cw-wrap').style.display = v === 'custom' ? 'flex' : 'none';
+function onAspectChange(){
+  document.getElementById('cw-wrap').style.display=document.getElementById('aspect').value==='custom'?'flex':'none';
   initCrop();
 }
 
-window.addEventListener('resize', () => { if (map) initCrop(); });
+window.addEventListener('resize',()=>{ if(map)initCrop(); });
 
-// ─────────────────────────────────────────
-// STATUS BAR
-// ─────────────────────────────────────────
-function updateStatus() {
-  if (!map) return;
-  const c = map.getCenter();
-  document.getElementById('sb-center').textContent =
-    `${c.lat().toFixed(4)}, ${c.lng().toFixed(4)}`;
-  document.getElementById('sb-zoom').textContent = map.getZoom();
-  document.getElementById('sb-markers').textContent = markers.length;
+// ── STATUS ───────────────────────────────────────────────
+function updateStatus(){
+  if(!map)return;
+  const c=map.getCenter();
+  document.getElementById('sb-c').textContent=`${c.lat().toFixed(4)}, ${c.lng().toFixed(4)}`;
+  document.getElementById('sb-z').textContent=map.getZoom();
+  document.getElementById('sb-m').textContent=markers.length;
 }
 
-// ─────────────────────────────────────────
-// PNG MARKERS — ADD
-// ─────────────────────────────────────────
-function onFileSelect(input) {
-  [...input.files].forEach(addFile);
-  input.value = '';
+// ── MARKERS ──────────────────────────────────────────────
+function onFileSelect(inp){ [...inp.files].forEach(addFile); inp.value=''; }
+function addFile(f){ const r=new FileReader(); r.onload=e=>spawnMarker(e.target.result); r.readAsDataURL(f); }
+
+function spawnMarker(src){
+  const layer=document.getElementById('overlay-layer');
+  const el=document.createElement('div'); el.className='map-marker';
+  const img=document.createElement('img'); img.src=src; img.draggable=false;
+  const handle=document.createElement('div'); handle.className='resize-handle';
+  el.appendChild(img); el.appendChild(handle); layer.appendChild(el);
+  const w=80,h=80,x=cropX+cropW/2-w/2,y=cropY+cropH/2-h/2;
+  const m={el,img,x,y,w,h,src};
+  markers.push(m); applyPos(m); bindMarker(m,handle); selectMarker(m); updateStatus();
 }
 
-function addFile(file) {
-  const reader = new FileReader();
-  reader.onload = e => spawnMarker(e.target.result);
-  reader.readAsDataURL(file);
+function applyPos(m){ m.el.style.left=m.x+'px';m.el.style.top=m.y+'px';m.el.style.width=m.w+'px';m.el.style.height=m.h+'px'; }
+
+function bindMarker(m,handle){
+  m.el.addEventListener('mousedown',e=>{ if(e.target===handle)return; e.stopPropagation();selectMarker(m);startMove(e,m); });
+  handle.addEventListener('mousedown',e=>{ e.stopPropagation();selectMarker(m);startResize(e,m); });
+  m.el.addEventListener('wheel',e=>{ if(selected!==m)return;e.preventDefault();m.w=Math.max(20,m.w+(e.deltaY>0?-5:5));m.h=m.w;applyPos(m);syncSize(m.w); },{passive:false});
 }
 
-function spawnMarker(src) {
-  const stage = document.getElementById('stage');
-  const layer = document.getElementById('overlay-layer');
+function startMove(e,m){ const sx=e.clientX-m.x,sy=e.clientY-m.y; const mv=ev=>{m.x=ev.clientX-sx;m.y=ev.clientY-sy;applyPos(m);}; const up=()=>{document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);}; document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up); }
+function startResize(e,m){ const sx=e.clientX,sw=m.w; const mv=ev=>{m.w=Math.max(20,sw+ev.clientX-sx);m.h=m.w;applyPos(m);syncSize(m.w);}; const up=()=>{document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);}; document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up); }
+function selectMarker(m){ if(selected)selected.el.classList.remove('selected');selected=m;m.el.classList.add('selected');document.getElementById('marker-controls').style.display='flex';syncSize(m.w); }
+function deselect(){ if(selected)selected.el.classList.remove('selected');selected=null;document.getElementById('marker-controls').style.display='none'; }
+function syncSize(w){ document.getElementById('size-range').value=Math.min(400,Math.round(w));document.getElementById('size-val').textContent=Math.round(w)+'px'; }
+function onResizeSlider(v){ if(!selected)return;selected.w=selected.h=parseInt(v);applyPos(selected);document.getElementById('size-val').textContent=v+'px'; }
+function deleteSelected(){ if(!selected)return;selected.el.remove();markers=markers.filter(m=>m!==selected);selected=null;document.getElementById('marker-controls').style.display='none';updateStatus(); }
 
-  const el = document.createElement('div');
-  el.className = 'map-marker';
+// ── DRAG & DROP ──────────────────────────────────────────
+let dc=0;
+document.addEventListener('dragenter',e=>{ if([...e.dataTransfer.types].includes('Files')){dc++;document.getElementById('drag-mask').classList.add('show');} });
+document.addEventListener('dragleave',e=>{ dc--;if(dc<=0){dc=0;document.getElementById('drag-mask').classList.remove('show');} });
+function onDragOver(e){e.preventDefault();}
+function onDrop(e){ e.preventDefault();dc=0;document.getElementById('drag-mask').classList.remove('show');[...e.dataTransfer.files].filter(f=>f.type.startsWith('image/')).forEach(addFile); }
 
-  const img = document.createElement('img');
-  img.src = src;
-  img.draggable = false;
-
-  const handle = document.createElement('div');
-  handle.className = 'resize-handle';
-
-  el.appendChild(img);
-  el.appendChild(handle);
-  layer.appendChild(el);
-
-  // Default size & position (center of crop frame)
-  const w = 80, h = 80;
-  const x = cropX + cropW / 2 - w / 2;
-  const y = cropY + cropH / 2 - h / 2;
-
-  const m = { el, img, x, y, w, h };
-  markers.push(m);
-
-  applyPos(m);
-  bindMarker(m, handle);
-  selectMarker(m);
-  updateStatus();
-}
-
-function applyPos(m) {
-  m.el.style.left   = m.x + 'px';
-  m.el.style.top    = m.y + 'px';
-  m.el.style.width  = m.w + 'px';
-  m.el.style.height = m.h + 'px';
-}
-
-// ─────────────────────────────────────────
-// DRAG — MOVE MARKER
-// ─────────────────────────────────────────
-function bindMarker(m, handle) {
-  // click to select
-  m.el.addEventListener('mousedown', e => {
-    if (e.target === handle) return; // handled by resize
-    e.stopPropagation();
-    selectMarker(m);
-    startMove(e, m);
-  });
-
-  // resize handle
-  handle.addEventListener('mousedown', e => {
-    e.stopPropagation();
-    selectMarker(m);
-    startResize(e, m);
-  });
-
-  // scroll to resize when selected
-  m.el.addEventListener('wheel', e => {
-    if (selected !== m) return;
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? -5 : 5;
-    m.w = Math.max(20, m.w + delta);
-    m.h = Math.max(20, m.h + delta);
-    applyPos(m);
-    syncSizeSlider(m.w);
-  }, { passive: false });
-}
-
-function startMove(e, m) {
-  const startX = e.clientX - m.x;
-  const startY = e.clientY - m.y;
-
-  const onMove = ev => {
-    m.x = ev.clientX - startX;
-    m.y = ev.clientY - startY;
-    applyPos(m);
-  };
-  const onUp = () => {
-    document.removeEventListener('mousemove', onMove);
-    document.removeEventListener('mouseup', onUp);
-  };
-  document.addEventListener('mousemove', onMove);
-  document.addEventListener('mouseup', onUp);
-}
-
-function startResize(e, m) {
-  const startX  = e.clientX;
-  const startW  = m.w;
-
-  const onMove = ev => {
-    const dw = ev.clientX - startX;
-    m.w = Math.max(20, startW + dw);
-    m.h = m.w; // uniform scale
-    applyPos(m);
-    syncSizeSlider(m.w);
-  };
-  const onUp = () => {
-    document.removeEventListener('mousemove', onMove);
-    document.removeEventListener('mouseup', onUp);
-  };
-  document.addEventListener('mousemove', onMove);
-  document.addEventListener('mouseup', onUp);
-}
-
-// ─────────────────────────────────────────
-// SELECT / DESELECT
-// ─────────────────────────────────────────
-function selectMarker(m) {
-  if (selected) selected.el.classList.remove('selected');
-  selected = m;
-  m.el.classList.add('selected');
-  document.getElementById('marker-controls').style.display = 'flex';
-  syncSizeSlider(m.w);
-}
-
-function deselect() {
-  if (selected) selected.el.classList.remove('selected');
-  selected = null;
-  document.getElementById('marker-controls').style.display = 'none';
-}
-
-function syncSizeSlider(w) {
-  const s = document.getElementById('size-range');
-  s.value = Math.min(400, Math.round(w));
-  document.getElementById('size-val').textContent = Math.round(w) + 'px';
-}
-
-function onResizeSlider(val) {
-  if (!selected) return;
-  selected.w = parseInt(val);
-  selected.h = parseInt(val);
-  applyPos(selected);
-  document.getElementById('size-val').textContent = val + 'px';
-}
-
-function deleteSelected() {
-  if (!selected) return;
-  selected.el.remove();
-  markers = markers.filter(m => m !== selected);
-  selected = null;
-  document.getElementById('marker-controls').style.display = 'none';
-  updateStatus();
-}
-
-// ─────────────────────────────────────────
-// DRAG & DROP FROM DESKTOP
-// ─────────────────────────────────────────
-let dragCount = 0;
-
-document.addEventListener('dragenter', e => {
-  if ([...e.dataTransfer.types].includes('Files')) {
-    dragCount++;
-    document.getElementById('drag-over-mask').classList.add('show');
-  }
-});
-
-document.addEventListener('dragleave', e => {
-  dragCount--;
-  if (dragCount <= 0) {
-    dragCount = 0;
-    document.getElementById('drag-over-mask').classList.remove('show');
-  }
-});
-
-function onDragOver(e) { e.preventDefault(); }
-function onDragLeave(e) {}
-
-function onDrop(e) {
-  e.preventDefault();
-  dragCount = 0;
-  document.getElementById('drag-over-mask').classList.remove('show');
-  const files = [...e.dataTransfer.files].filter(f => f.type.startsWith('image/'));
-  files.forEach(addFile);
-}
-
-// ─────────────────────────────────────────
-// EXPORT
-// ─────────────────────────────────────────
-async function startExport() {
-  openModal();
-  setModalStatus('Preparing canvas…');
-  setProgress(10);
-
-  // Temporarily hide crop frame and deselect
-  const cf = document.getElementById('crop-frame');
-  cf.style.display = 'none';
-  deselect();
-
-  await sleep(100); // let UI settle
-
-  const scale = parseFloat(document.getElementById('scale-range').value);
-
-  setModalStatus('Rendering map tiles…');
-  setProgress(30);
-
-  try {
-    const stage = document.getElementById('stage');
-    const canvas = await html2canvas(stage, {
-      useCORS: true,
-      allowTaint: true,
-      scale: scale,
-      x: cropX,
-      y: cropY,
-      width:  cropW,
-      height: cropH,
-      windowWidth:  stage.offsetWidth,
-      windowHeight: stage.offsetHeight,
-      logging: false,
-      backgroundColor: '#f2f2f2'
-    });
-
-    setProgress(80);
-    setModalStatus('Compositing overlays…');
-    await sleep(80);
-
-    // Convert to final resolution
-    const targetW = parseInt(document.getElementById('res').value);
-    const [arW, arH] = getAR();
-    const targetH = Math.round(targetW * arH / arW);
-
-    const finalCanvas = document.createElement('canvas');
-    finalCanvas.width  = targetW;
-    finalCanvas.height = targetH;
-    const ctx = finalCanvas.getContext('2d');
-    ctx.drawImage(canvas, 0, 0, targetW, targetH);
-
-    setProgress(95);
-
-    const dataURL = finalCanvas.toDataURL('image/jpeg', 0.95);
-
-    // Show preview
-    const prevImg = document.getElementById('preview-img');
-    prevImg.src = dataURL;
-    document.getElementById('preview-wrap').style.display = 'flex';
-    document.getElementById('modal-btns').style.display   = 'flex';
-    document.getElementById('modal-sub').textContent =
-      `${targetW} × ${targetH} px — ready to download`;
-    setModalStatus('');
-    setProgress(100);
-
-    document.getElementById('btn-dl').onclick = () => {
-      const a = document.createElement('a');
-      a.href     = dataURL;
-      a.download = `dem-oak-map-${Date.now()}.jpg`;
-      a.click();
-    };
-
-  } catch(err) {
-    setModalStatus('Export failed: ' + err.message);
-    console.error(err);
-  }
-
-  // Restore crop frame
-  cf.style.display = 'block';
-}
-
-function openModal() {
+// ── EXPORT MODAL ─────────────────────────────────────────
+function openExportModal(){
   document.getElementById('modal').classList.add('open');
-  document.getElementById('preview-wrap').style.display = 'none';
-  document.getElementById('modal-btns').style.display   = 'none';
-  document.getElementById('modal-sub').textContent      = 'Capturing map with all overlays…';
-  document.getElementById('modal-status').textContent   = '';
-  document.getElementById('prog-bar').style.display     = 'block';
-  document.getElementById('prog-fill').style.width      = '0%';
+  resetModal();
+  updateExportInfo();
+  // Update info when options change
+  ['opt-grid','opt-scale','opt-zoom','opt-format'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.addEventListener('change',updateExportInfo);
+  });
 }
 
-function closeModal() {
-  document.getElementById('modal').classList.remove('open');
+function parseGrid(val){
+  const [c,r]=val.split('x').map(Number);
+  return {cols:c,rows:r};
 }
 
-function setModalStatus(msg) {
-  document.getElementById('modal-status').textContent = msg;
+function updateExportInfo(){
+  const gridEl=document.getElementById('opt-grid');
+  const scaleEl=document.getElementById('opt-scale');
+  if(!gridEl||!scaleEl||!map)return;
+  const {cols,rows}=parseGrid(gridEl.value);
+  const scale=parseInt(scaleEl.value);
+  const tw=cols*TILE_SIZE*scale;
+  const th=rows*TILE_SIZE*scale;
+  const zoomOpt=document.getElementById('opt-zoom').value;
+  const currentZoom=map.getZoom();
+  const exportZoom=zoomOpt==='same'?currentZoom:zoomOpt==='plus1'?currentZoom+1:currentZoom+2;
+  const totalTiles=cols*rows;
+  const fmt=document.getElementById('opt-format').value.toUpperCase();
+  document.getElementById('exp-info-box').innerHTML=
+    `<b>Output size:</b> ${tw.toLocaleString()} × ${th.toLocaleString()} px &nbsp;·&nbsp; <b>Tiles:</b> ${totalTiles} requests &nbsp;·&nbsp; <b>Format:</b> ${fmt}<br>
+     <b>Map zoom for tiles:</b> ${exportZoom} &nbsp;·&nbsp; <b>Tile scale:</b> ${scale}× (${TILE_SIZE*scale}px each)<br>
+     Each tile is fetched from Google's servers at full quality — no screenshot, no blur.`;
+  updateCropLabel();
 }
 
-function setProgress(pct) {
-  document.getElementById('prog-fill').style.width = pct + '%';
+function resetModal(){
+  document.getElementById('exp-options').style.display='block';
+  document.getElementById('exp-progress').style.display='none';
+  document.getElementById('exp-result').style.display='none';
+  document.getElementById('m-title').textContent='Export Settings';
+  document.getElementById('m-sub').textContent='Choose your export quality and format — tile stitching renders from Google\'s servers, so zoom in as much as you want on the exported file.';
 }
 
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+function closeModal(){ document.getElementById('modal').classList.remove('open'); }
+
+// ── TILE STITCHING ───────────────────────────────────────
+
+// Convert lat/lng + zoom to tile X,Y (Google/OSM standard)
+function lngToTileX(lng, zoom){ return Math.floor((lng+180)/360 * Math.pow(2,zoom)); }
+function latToTileY(lat, zoom){
+  const r=lat*Math.PI/180;
+  return Math.floor((1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*Math.pow(2,zoom));
+}
+
+// Get pixel offset of a lat/lng within its tile
+function latLngToPixel(lat,lng,zoom){
+  const tx=lngToTileX(lng,zoom), ty=latToTileY(lat,zoom);
+  const worldPx=Math.pow(2,zoom)*256;
+  const px=Math.floor((lng+180)/360*worldPx);
+  const sinLat=Math.sin(lat*Math.PI/180);
+  const py=Math.floor((0.5-Math.log((1+sinLat)/(1-sinLat))/(4*Math.PI))*worldPx);
+  return {px,py,tx,ty};
+}
+
+function loadImage(url){ return new Promise((res,rej)=>{ const img=new Image(); img.crossOrigin='anonymous'; img.onload=()=>res(img); img.onerror=()=>rej(new Error('Tile failed: '+url)); img.src=url; }); }
+
+async function startTileExport(){
+  if(!map)return;
+
+  // Hide options, show progress
+  document.getElementById('exp-options').style.display='none';
+  document.getElementById('exp-progress').style.display='block';
+  document.getElementById('m-title').textContent='Generating Export';
+  document.getElementById('m-sub').textContent='Fetching tiles from Google Maps servers…';
+  document.getElementById('prog').style.display='block';
+  document.getElementById('prog-label').style.display='block';
+
+  const gridVal=document.getElementById('opt-grid').value;
+  const {cols,rows}=parseGrid(gridVal);
+  const scale=parseInt(document.getElementById('opt-scale').value);
+  const fmt=document.getElementById('opt-format').value;
+  const zoomOpt=document.getElementById('opt-zoom').value;
+
+  const currentZoom=map.getZoom();
+  const exportZoom=zoomOpt==='same'?currentZoom:zoomOpt==='plus1'?currentZoom+1:currentZoom+2;
+
+  const tileW=TILE_SIZE*scale;
+  const tileH=TILE_SIZE*scale;
+  const totalW=cols*tileW;
+  const totalH=rows*tileH;
+  const total=cols*rows;
+
+  // Build tile grid UI
+  const tg=document.getElementById('tile-grid');
+  tg.style.display='grid';
+  tg.style.gridTemplateColumns=`repeat(${cols},${Math.min(60,200/cols)}px)`;
+  tg.style.gridTemplateRows=`repeat(${rows},${Math.min(40,140/rows)}px)`;
+  tg.innerHTML='';
+  const cells=[];
+  for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+    const cell=document.createElement('div');
+    cell.className='tile-cell loading';
+    cell.textContent=`${c},${r}`;
+    cell.style.fontSize='7px';
+    tg.appendChild(cell);
+    cells.push(cell);
+  }
+
+  setProg(5); setSt('Building tile coordinates…');
+
+  // Get center of current map view
+  const center=map.getCenter();
+  const cLat=center.lat(), cLng=center.lng();
+
+  // Get center pixel position at export zoom
+  const {px:cPx,py:cPy}=latLngToPixel(cLat,cLng,exportZoom);
+
+  // Calculate top-left pixel of our grid
+  const halfW=(cols*TILE_SIZE)/2;
+  const halfH=(rows*TILE_SIZE)/2;
+  const startPx=cPx-halfW;
+  const startPy=cPy-halfH;
+
+  // Build style params for Static API
+  const styleParams=styleToParams(buildStyle());
+
+  // Fetch all tiles
+  const canvas=document.createElement('canvas');
+  canvas.width=totalW;
+  canvas.height=totalH;
+  const ctx=canvas.getContext('2d');
+
+  let done=0;
+
+  // We use lat/lng center per tile rather than tile x/y
+  // because Static API takes center+zoom+size, not tile indices
+  // Each tile center is offset from the map center by (col-halfCols)*tileSize degrees equivalent
+
+  // Convert pixel offset to lat/lng
+  function pixelToLatLng(px,py,zoom){
+    const worldPx=Math.pow(2,zoom)*256;
+    const lng=px/worldPx*360-180;
+    const n=Math.PI-2*Math.PI*py/worldPx;
+    const lat=180/Math.PI*Math.atan(0.5*(Math.exp(n)-Math.exp(-n)));
+    return {lat,lng};
+  }
+
+  const tilePromises=[];
+
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const tileCenterPx=startPx+c*TILE_SIZE+TILE_SIZE/2;
+      const tileCenterPy=startPy+r*TILE_SIZE+TILE_SIZE/2;
+      const {lat:tLat,lng:tLng}=pixelToLatLng(tileCenterPx,tileCenterPy,exportZoom);
+
+      const url=`https://maps.googleapis.com/maps/api/staticmap?center=${tLat},${tLng}&zoom=${exportZoom}&size=${TILE_SIZE}x${TILE_SIZE}&scale=${scale}&maptype=roadmap&${styleParams}&key=${API_KEY}`;
+
+      const ci=r*cols+c;
+      const p=loadImage(url).then(img=>{
+        ctx.drawImage(img,c*tileW,r*tileH,tileW,tileH);
+        cells[ci].classList.remove('loading');
+        cells[ci].classList.add('done');
+        cells[ci].textContent='✓';
+        done++;
+        setProg(5+Math.round(done/total*70));
+        setSt(`Fetched ${done} of ${total} tiles…`);
+      }).catch(err=>{
+        cells[ci].style.background='rgba(200,60,60,0.2)';
+        cells[ci].textContent='✗';
+        done++;
+        console.warn('Tile error',ci,err);
+      });
+      tilePromises.push(p);
+    }
+  }
+
+  await Promise.all(tilePromises);
+  setProg(78); setSt('Compositing PNG markers onto map…');
+  await sleep(60);
+
+  // Draw PNG markers on top
+  // We need to figure out where each marker sits relative to the stitched canvas
+  // Markers have stage-relative px positions; we need to map them to the export canvas
+
+  // The crop frame defines what area of the interactive map is "exported"
+  // The tile canvas covers cols×rows tiles centered on the map center at exportZoom
+  // So we need to find the pixel offset between crop frame center and tile grid center
+
+  const stage=document.getElementById('stage');
+  const stageCenterX=stage.offsetWidth/2;
+  const stageCenterY=stage.offsetHeight/2;
+
+  // crop frame center in stage coords
+  const cropCenterX=cropX+cropW/2;
+  const cropCenterY=cropY+cropH/2;
+
+  // Offset of crop center from stage center (in screen pixels)
+  const cropOffX=cropCenterX-stageCenterX;
+  const cropOffY=cropCenterY-stageCenterY;
+
+  // Scale factor: how many export pixels per screen pixel
+  // Export canvas is cols*tileW wide = cols*TILE_SIZE*scale px
+  // covering cols*TILE_SIZE world pixels at exportZoom
+  // Screen crop frame covers cropW screen pixels
+  // We need to know the world pixel extent of the crop frame at exportZoom
+
+  // Pixels per screen pixel at current interactive zoom vs export zoom
+  const zoomDiff=exportZoom-currentZoom;
+  const zoomScale=Math.pow(2,zoomDiff);
+
+  // The tile canvas covers cols*TILE_SIZE world pixels wide at exportZoom
+  // The crop frame covers cropW screen pixels, each representing (256/devicePixelRatio) world pixels at current zoom... 
+  // simplified: use ratio of canvas world coverage to crop screen coverage
+  const worldPixCoverage=cols*TILE_SIZE; // world pixels at exportZoom
+  const canvasPixW=totalW; // export canvas pixels
+
+  // On screen: each Google Maps screen px ≈ 256 world px / 2^zoom * devicePixelRatio
+  // We approximate: world px per screen px = 1/zoomScale (normalised)
+  // Export px per screen px = (canvasPixW / worldPixCoverage) * (worldPixCoverage / (cols * TILE_SIZE / zoomScale))
+  // Simplified ratio: canvasPixW / (cropW * zoomScale)... 
+  // Safest: compute world px per screen px, then to canvas px
+
+  // world pixels per screen pixel at currentZoom (256px tiles, standard)
+  const worldPerScreen=256/Math.pow(2,currentZoom)*window.devicePixelRatio;
+  // no, simpler: tile canvas px per world px at exportZoom = scale (since 1 world px = scale canvas px)
+  // world px per screen px at currentZoom ≈ 256/(Math.pow(2,currentZoom)) but Google uses 512 base
+  // Just use the empirical ratio: canvas covers cols*TILE_SIZE world px → canvasPixW output px
+  // The stage/screen covers cropW px of the map at currentZoom
+  // crop world coverage = cropW * (map world px per screen px at currentZoom)
+  // Google Maps: at zoom z, the world is 256*2^z pixels. Full world fits 256*2^z screen px at zoom z on a standard display
+  const mapWorldWidth=256*Math.pow(2,currentZoom);
+  // but Google's JS map: at zoom z, 1 screen pixel = 1 world pixel (256px tiles, zoom defines the world size)
+  // So world px per screen px = 1 (at current zoom, 1 screen px = 1 world px at that zoom level)
+  // The tile grid at exportZoom: 1 world px at exportZoom = zoomScale world px at currentZoom
+  // So 1 screen px (current) = 1/zoomScale world px (at exportZoom)
+  // tile canvas: canvasPixW output px = worldPixCoverage world px (at exportZoom)
+  // output px per screen px = canvasPixW / worldPixCoverage * (1/zoomScale) ... no
+
+  // SIMPLEST CORRECT APPROACH:
+  // At export zoom, the tile canvas (totalW output px) covers (cols * TILE_SIZE) world px.
+  // Each output px = 1/scale world px (since scale=2 means 2 output px per world px).
+  // At current map zoom z, 1 screen px = 1 world px (Google Maps definition).
+  // At export zoom z+d, 1 world px (at z) = 2^d world px (at z+d).
+  // So 1 screen px = 2^d world px at exportZoom = 2^d / scale output px.
+  const screenToCanvas = zoomScale / scale * scale; // = zoomScale output px per screen px... 
+  // actually: 1 screen px at currentZoom → zoomScale world px at exportZoom → zoomScale * scale output px? No.
+  // world px at exportZoom per screen px at currentZoom = zoomScale
+  // output canvas px per world px at exportZoom = scale (since tile TILE_SIZE world px = TILE_SIZE*scale canvas px)
+  // output canvas px per screen px = zoomScale * scale... that seems large.
+  // Let's just use: screenToCanvas = totalW / (cropW * (1/zoomScale))
+  // i.e. the canvas width maps to cropW/zoomScale screen pixels? 
+  // Actually most robust: canvas center = tile grid center = map center.
+  // marker screen pos relative to map center → scale to canvas coords.
+  const scToCanvas = totalW / (cols * TILE_SIZE / zoomScale);
+  // = totalW * zoomScale / (cols * TILE_SIZE)
+  // = cols * TILE_SIZE * scale * zoomScale / (cols * TILE_SIZE)
+  // = scale * zoomScale  ✓ (makes sense: more zoom = markers appear larger relative to map)
+
+  for(const m of markers){
+    // marker center in stage coords
+    const mx=m.x+m.w/2, my=m.y+m.h/2;
+    // offset from stage center
+    const mOffX=mx-stageCenterX, mOffY=my-stageCenterY;
+    // in canvas coords (canvas center = totalW/2, totalH/2)
+    const canvasX=totalW/2+mOffX*scToCanvas;
+    const canvasY=totalH/2+mOffY*scToCanvas;
+    // marker size in canvas px
+    const markerW=m.w*scToCanvas, markerH=m.h*scToCanvas;
+
+    const mImg=await loadImage(m.src).catch(()=>null);
+    if(mImg){
+      ctx.drawImage(mImg,canvasX-markerW/2,canvasY-markerH/2,markerW,markerH);
+    }
+  }
+
+  setProg(90); setSt('Finalising…'); await sleep(60);
+
+  // Convert to desired format
+  let dataURL, mime, ext;
+  if(fmt==='png'){
+    dataURL=canvas.toDataURL('image/png');
+    mime='image/png'; ext='png';
+  } else if(fmt==='jpeg'){
+    dataURL=canvas.toDataURL('image/jpeg',0.95);
+    mime='image/jpeg'; ext='jpg';
+  } else {
+    // PDF — embed as PNG inside a minimal PDF
+    dataURL=canvas.toDataURL('image/png');
+    mime='image/png'; ext='pdf';
+  }
+
+  setProg(98); setSt('');
+
+  // Show result
+  document.getElementById('exp-progress').style.display='none';
+  document.getElementById('exp-result').style.display='block';
+  document.getElementById('m-title').textContent='Ready to Download';
+  document.getElementById('m-sub').textContent=`${totalW.toLocaleString()} × ${totalH.toLocaleString()} px · ${cols}×${rows} tiles · ${fmt.toUpperCase()}`;
+
+  const prevImg=document.getElementById('prev-img');
+  prevImg.src=dataURL;
+  document.getElementById('prev-wrap').style.display='flex';
+
+  if(fmt==='pdf'){
+    document.getElementById('btn-dl').onclick=()=>downloadAsPDF(canvas,totalW,totalH,dataURL);
+  } else {
+    document.getElementById('btn-dl').onclick=()=>{
+      const a=document.createElement('a'); a.href=dataURL; a.download=`dem-oak-map-${Date.now()}.${ext}`; a.click();
+    };
+  }
+
+  setProg(100);
+}
+
+function downloadAsPDF(canvas,w,h,pngDataURL){
+  // Build a minimal PDF with the image embedded
+  // PDF uses points: 1pt = 1/72 inch. We target A3 landscape or proportional.
+  // Simplest: embed image at 72dpi so pt = px (1:1)
+  const pdfW=w, pdfH=h;
+  // We need to embed the PNG as a PDF image stream.
+  // For simplicity, generate an HTML page and trigger print to PDF (browser native).
+  const win=window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head><style>
+    *{margin:0;padding:0;}
+    body{width:${pdfW}px;height:${pdfH}px;overflow:hidden;}
+    img{width:${pdfW}px;height:${pdfH}px;display:block;}
+    @page{size:${pdfW}px ${pdfH}px;margin:0;}
+    @media print{body{width:${pdfW}px;height:${pdfH}px;}}
+  </style></head><body><img src="${pngDataURL}" onload="window.print()"></body></html>`);
+  win.document.close();
+}
+
+function setProg(p){document.getElementById('prog-f').style.width=p+'%';}
+function setSt(m){document.getElementById('m-status').textContent=m;document.getElementById('prog-label').textContent=m;}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 </script>
 </body>
 </html>
