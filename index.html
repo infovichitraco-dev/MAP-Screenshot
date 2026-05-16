@@ -787,7 +787,23 @@ function initMap(){
   map.addListener('center_changed',updateStatus);
   map.addListener('zoom_changed',()=>{updateStatus();updateExportInfo();});
   map.addListener('click',()=>{deselectShape();deselect();});
-  google.maps.event.addListenerOnce(map,'idle',()=>{initCrop();updateStatus();});
+  google.maps.event.addListenerOnce(map,'idle',()=>{
+    // Force resize into now-visible container
+    google.maps.event.trigger(map,'resize');
+    map.setCenter(CENTER);
+    initCrop();
+    updateStatus();
+    // Hook autosave and highlight redraw
+    setTimeout(()=>{
+      try{hookAutosave();}catch(e){}
+      try{hookHighlightRedraw();}catch(e){}
+      // Restore saved state if pending (fresh login)
+      if(window._pendingRestore){
+        window._pendingRestore=false;
+        try{restoreState();}catch(e){console.warn('Restore failed:',e);}
+      }
+    },500);
+  });
 }
 
 // Maps script injected after auth — see loadMapsScript()
@@ -2310,19 +2326,32 @@ function loadMapsScript(){
   const s=document.createElement('script');
   s.src=`https://maps.googleapis.com/maps/api/js?key=${API_KEY}&callback=initMap`;
   s.async=true;
+  s.onerror=()=>{
+    document.body.insertAdjacentHTML('beforeend',
+      '<div style="position:fixed;inset:0;background:rgba(42,29,18,0.97);z-index:9998;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;color:#E2C9A8;font-family:Archivo,sans-serif;text-align:center;padding:40px">' +
+      '<p style="font-size:14px;letter-spacing:0.1em">Google Maps failed to load</p>' +
+      '<p style="font-size:11px;color:#8B6A4F;max-width:400px;line-height:1.7">Check that your API key is valid, billing is active on GCP, and <b style="color:#E2C9A8">infovichitraco-dev.github.io/*</b> is in the allowed referrers list on your API key.</p>' +
+      '<button onclick="location.reload()" style="background:#E2C9A8;color:#3D2B1F;border:none;padding:10px 24px;font-family:Archivo,sans-serif;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;margin-top:8px">Retry</button>' +
+      '</div>'
+    );
+  };
   document.head.appendChild(s);
 }
+// Google Maps auth failure handler (called by Maps API when key is rejected)
+window.gm_authFailure=function(){
+  document.body.insertAdjacentHTML('beforeend',
+    '<div style="position:fixed;inset:0;background:rgba(42,29,18,0.97);z-index:9998;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;color:#E2C9A8;font-family:Archivo,sans-serif;text-align:center;padding:40px">' +
+    '<p style="font-size:14px;letter-spacing:0.1em">API Key Error</p>' +
+    '<p style="font-size:11px;color:#8B6A4F;max-width:400px;line-height:1.7">Google Maps rejected the API key. Ensure <b style="color:#E2C9A8">Maps JavaScript API</b> is enabled in GCP and billing is active. If on GitHub Pages, add <b style="color:#E2C9A8">infovichitraco-dev.github.io/*</b> to allowed HTTP referrers.</p>' +
+    '<button onclick="location.reload()" style="background:#E2C9A8;color:#3D2B1F;border:none;padding:10px 24px;font-family:Archivo,sans-serif;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;margin-top:8px">Retry</button>' +
+    '</div>'
+  );
+};
 
 window.addEventListener('load', boot);
 
-// Hook autosave after map is ready
-const _origInitMap=initMap;
-initMap=function(){
-  _origInitMap();
-  google.maps.event.addListenerOnce(map,'idle',()=>{
-    setTimeout(hookAutosave,500);hookHighlightRedraw();
-  });
-};
+// initMap is called directly by Google Maps — no wrapping needed.
+// Post-init logic is already inside initMap() above.
 </script>
 </body>
 </html>
