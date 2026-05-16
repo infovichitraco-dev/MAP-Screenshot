@@ -241,6 +241,13 @@ input[type="range"]{accent-color:var(--gold);cursor:pointer;}
 #feature-panel.ui-ready{display:flex!important;}
 #statusbar.ui-ready{display:flex!important;}
 #save-indicator.ui-ready{display:block!important;}
+#map{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  z-index:1;
+}
 </style>
 <style>
 /* ── PASSWORD GATE ── */
@@ -459,34 +466,7 @@ input[type="range"]{accent-color:var(--gold);cursor:pointer;}
   </div>
 </div>
 
-<!-- STAGE -->
-<div id="stage" ondragover="onDragOver(event)" ondrop="onDrop(event)">
-  <div id="map"></div>
-  <div id="overlay-layer"></div>
-  <svg id="svg-layer" class="select-mode" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <filter id="shadow-sm"><feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.3"/></filter>
-      <filter id="shadow-md"><feDropShadow dx="3" dy="3" stdDeviation="6" flood-opacity="0.4"/></filter>
-      <filter id="shadow-lg"><feDropShadow dx="5" dy="5" stdDeviation="10" flood-opacity="0.5"/></filter>
-      <filter id="shadow-none"></filter>
-      <marker id="arrowhead" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-        <path d="M0,0 L8,3 L0,6 Z" fill="currentColor"/>
-      </marker>
-      <marker id="arrowhead-sel" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-        <path d="M0,0 L8,3 L0,6 Z" fill="#C9A96E"/>
-      </marker>
-    </defs>
-    <g id="shapes-group"></g>
-  </svg>
-  <div id="crop-frame">
-    <div id="crop-tag">Export Frame — pan &amp; zoom map inside</div>
-    <div class="crop-rule cr-v1"></div><div class="crop-rule cr-v2"></div>
-    <div class="crop-rule cr-h1"></div><div class="crop-rule cr-h2"></div>
-    <div class="ccm ccm-tl"></div><div class="ccm ccm-tr"></div>
-    <div class="ccm ccm-bl"></div><div class="ccm ccm-br"></div>
-    <div id="crop-px"></div>
-  </div>
-</div>
+	
 
 <!-- SHAPE PROPERTIES PANEL -->
 <div id="shape-props">
