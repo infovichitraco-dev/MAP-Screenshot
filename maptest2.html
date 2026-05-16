@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DEM Oak — Map Studio</title>
+<style>
+body,html{margin:0;padding:0;height:100%;font-family:Arial,sans-serif;}
+
+/* Password gate — visible by default, covers everything */
+#gate{
+  position:fixed;inset:0;background:#2a1d12;z-index:9999;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;
+}
+#gate h1{color:#E2C9A8;font-size:24px;letter-spacing:0.2em;}
+#gate input{padding:10px 16px;font-size:14px;width:240px;border:1px solid #E2C9A8;background:transparent;color:#fff;outline:none;}
+#gate button{background:#E2C9A8;color:#2a1d12;border:none;padding:10px 24px;font-size:12px;letter-spacing:0.1em;cursor:pointer;}
+#gate .err{color:#e88;font-size:11px;min-height:16px;}
+
+/* Map fills full screen — always in DOM so Google Maps gets real dimensions */
+#map{position:fixed;inset:0;z-index:1;}
+</style>
+</head>
+<body>
+
+<!-- Gate sits on top of map -->
+<div id="gate">
+  <h1>DEM OAK</h1>
+  <input type="password" id="pw" placeholder="Password" onkeydown="if(event.key==='Enter')unlock()">
+  <button onclick="unlock()">Unlock</button>
+  <div class="err" id="err"></div>
+</div>
+
+<!-- Map always in DOM, renders under gate -->
+<div id="map"></div>
+
+<script>
+// SHA-256 of "FolioVichitra3009"
+const HASH = 'b6c6d51cf31501cc0b590a3c3fd9cdcca1bb96d65e7a8a3db149bf0d2fe98b9f';
+
+async function sha256(str){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function unlock(){
+  const val = document.getElementById('pw').value;
+  const hash = await sha256(val);
+  if(hash === HASH){
+    document.getElementById('gate').style.display = 'none';
+    sessionStorage.setItem('auth', hash);
+  } else {
+    document.getElementById('err').textContent = 'Wrong password';
+    document.getElementById('pw').value = '';
+    setTimeout(()=>document.getElementById('err').textContent='', 2000);
+  }
+}
+
+// Auto-login if session valid
+window.addEventListener('load', async ()=>{
+  const stored = sessionStorage.getItem('auth');
+  if(stored === HASH){
+    document.getElementById('gate').style.display = 'none';
+  }
+});
+
+// Maps loads immediately — map div is in DOM at full size
+function initMap(){
+  new google.maps.Map(document.getElementById('map'), {
+    center:{lat:19.2330, lng:72.8580},
+    zoom:14,
+    mapTypeControl:false,
+    streetViewControl:false
+  });
+}
+
+window.gm_authFailure = function(){
+  document.getElementById('err').textContent = 'Maps API key error — check GCP';
+};
+</script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLzi_xut6Y6lgShdOkPCePTXreCqUBJVo&callback=initMap" async></script>
+</body>
+</html>
