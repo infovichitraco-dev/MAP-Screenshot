@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Map Test 3</title>
+<style>
+body,html{margin:0;padding:0;height:100%;background:#111;}
+#gate{position:fixed;inset:0;background:#2a1d12;z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+#gate h1{color:#E2C9A8;font-size:24px;letter-spacing:0.2em;}
+#gate input{padding:10px 16px;font-size:14px;width:240px;border:1px solid #E2C9A8;background:transparent;color:#fff;outline:none;}
+#gate button{background:#E2C9A8;color:#2a1d12;border:none;padding:10px 24px;font-size:12px;letter-spacing:0.1em;cursor:pointer;font-weight:bold;}
+#gate .err{color:#e88;font-size:11px;min-height:16px;}
+#status{position:fixed;top:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);color:#fff;padding:8px 16px;font-family:monospace;font-size:12px;z-index:100;border-radius:4px;}
+#map{width:100%;height:100vh;}
+</style>
+</head>
+<body>
+<div id="status">Map loading…</div>
+<div id="map"></div>
+
+<div id="gate">
+  <h1>DEM OAK</h1>
+  <input type="password" id="pw" placeholder="Password" onkeydown="if(event.key==='Enter')unlock()">
+  <button onclick="unlock()">Unlock</button>
+  <div class="err" id="err"></div>
+</div>
+
+<script>
+const HASH='b6c6d51cf31501cc0b590a3c3fd9cdcca1bb96d65e7a8a3db149bf0d2fe98b9f';
+
+async function sha256(str){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function unlock(){
+  const val=document.getElementById('pw').value;
+  const hash=await sha256(val);
+  if(hash===HASH){
+    document.getElementById('gate').style.display='none';
+    sessionStorage.setItem('auth',hash);
+    initMapNow();
+  } else {
+    document.getElementById('err').textContent='Wrong password';
+    document.getElementById('pw').value='';
+    setTimeout(()=>document.getElementById('err').textContent='',2000);
+  }
+}
+
+window.addEventListener('load',async()=>{
+  const stored=sessionStorage.getItem('auth');
+  if(stored===HASH){
+    document.getElementById('gate').style.display='none';
+    initMapNow();
+  }
+});
+
+let mapLoaded=false;
+function initMapNow(){
+  if(mapLoaded)return;
+  mapLoaded=true;
+  document.getElementById('status').textContent='Initialising map…';
+  const mapEl=document.getElementById('map');
+  const m=new google.maps.Map(mapEl,{
+    center:{lat:19.2330,lng:72.8580},
+    zoom:14,
+    mapTypeControl:false,
+    streetViewControl:false
+  });
+  google.maps.event.addListenerOnce(m,'idle',()=>{
+    document.getElementById('status').style.background='#080';
+    document.getElementById('status').textContent='Map loaded!';
+    setTimeout(()=>document.getElementById('status').style.display='none',2000);
+  });
+}
+
+window.gm_authFailure=function(){
+  document.getElementById('status').style.background='#c00';
+  document.getElementById('status').textContent='API key rejected!';
+};
+
+// Google Maps loaded synchronously — initMap callback just sets a flag
+window.initMap=function(){
+  document.getElementById('status').textContent='Maps API ready — waiting for unlock';
+};
+</script>
+
+<!-- Load Maps synchronously (no async/defer) so it's definitely ready before unlock -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLzi_xut6Y6lgShdOkPCePTXreCqUBJVo&callback=initMap"></script>
+</body>
+</html>
