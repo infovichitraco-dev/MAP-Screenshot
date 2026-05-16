@@ -374,7 +374,7 @@ input[type="range"]{accent-color:var(--gold);cursor:pointer;}
     </div>
     <div class="hl-row">
       <span class="hl-lbl">Label</span>
-      <label class="pp-toggle"><input type="checkbox" id="hl-label" onchange="updateHighlight()"><div class="pp-t-track"></div><div class="pp-t-thumb"></div></label>
+      <label class="pp-toggle" for="hl-label"><input type="checkbox" id="hl-label" onchange="updateHighlight()"><div class="pp-t-track"></div><div class="pp-t-thumb"></div></label>
     </div>
     <div class="hl-row">
       <span class="hl-lbl">Label Color</span>
@@ -491,7 +491,7 @@ input[type="range"]{accent-color:var(--gold);cursor:pointer;}
     <div class="pp-row">
       <span class="pp-lbl">Fill</span>
       <div class="pp-toggle-row">
-        <label class="pp-toggle"><input type="checkbox" id="pp-fill-on" checked onchange="updateShapeProp()"><div class="pp-t-track"></div><div class="pp-t-thumb"></div></label>
+        <label class="pp-toggle" for="pp-fill-on"><input type="checkbox" id="pp-fill-on" checked onchange="updateShapeProp()"><div class="pp-t-track"></div><div class="pp-t-thumb"></div></label>
         <div class="pp-color">
           <input type="color" id="pp-fill" value="#E2C9A8" oninput="updateShapeProp()">
           <span class="pp-hex" id="pp-fill-hex">#E2C9A8</span>
@@ -512,7 +512,7 @@ input[type="range"]{accent-color:var(--gold);cursor:pointer;}
     <div class="pp-row">
       <span class="pp-lbl">Stroke</span>
       <div class="pp-toggle-row">
-        <label class="pp-toggle"><input type="checkbox" id="pp-stroke-on" checked onchange="updateShapeProp()"><div class="pp-t-track"></div><div class="pp-t-thumb"></div></label>
+        <label class="pp-toggle" for="pp-stroke-on"><input type="checkbox" id="pp-stroke-on" checked onchange="updateShapeProp()"><div class="pp-t-track"></div><div class="pp-t-thumb"></div></label>
         <div class="pp-color">
           <input type="color" id="pp-stroke" value="#3D2B1F" oninput="updateShapeProp()">
           <span class="pp-hex" id="pp-stroke-hex">#3D2B1F</span>
@@ -597,15 +597,15 @@ input[type="range"]{accent-color:var(--gold);cursor:pointer;}
   </div>
   <div class="sp-sec">
     <div class="sp-sec-title">Visibility</div>
-    <div class="sp-row"><span class="sp-lbl">All Labels</span><label class="spt"><input type="checkbox" id="v-alllabels" checked onchange="onVis()"><div class="spt-track"></div><div class="spt-thumb"></div></label></div>
-    <div class="sp-row"><span class="sp-lbl">Admin / Area Labels</span><label class="spt"><input type="checkbox" id="v-admin" onchange="onVis()"><div class="spt-track"></div><div class="spt-thumb"></div></label></div>
-    <div class="sp-row"><span class="sp-lbl">Local / Inner Roads</span><label class="spt"><input type="checkbox" id="v-local" onchange="onVis()"><div class="spt-track"></div><div class="spt-thumb"></div></label></div>
-    <div class="sp-row"><span class="sp-lbl">Arterial Roads</span><label class="spt"><input type="checkbox" id="v-arterial" checked onchange="onVis()"><div class="spt-track"></div><div class="spt-thumb"></div></label></div>
-    <div class="sp-row"><span class="sp-lbl">Highways</span><label class="spt"><input type="checkbox" id="v-highway" checked onchange="onVis()"><div class="spt-track"></div><div class="spt-thumb"></div></label></div>
-    <div class="sp-row"><span class="sp-lbl">Road Labels</span><label class="spt"><input type="checkbox" id="v-roadlabel" checked onchange="onVis()"><div class="spt-track"></div><div class="spt-thumb"></div></label></div>
-    <div class="sp-row"><span class="sp-lbl">POIs</span><label class="spt"><input type="checkbox" id="v-poi" onchange="onVis()"><div class="spt-track"></div><div class="spt-thumb"></div></label></div>
-    <div class="sp-row"><span class="sp-lbl">Transit</span><label class="spt"><input type="checkbox" id="v-transit" onchange="onVis()"><div class="spt-track"></div><div class="spt-thumb"></div></label></div>
-    <div class="sp-row"><span class="sp-lbl">Rail Stations</span><label class="spt"><input type="checkbox" id="v-rail" checked onchange="onVis()"><div class="spt-track"></div><div class="spt-thumb"></div></label></div>
+    <div class="sp-row"><span class="sp-lbl">All Labels</span><label class="spt" for="v-alllabels"><input type="checkbox" id="v-alllabels" checked onchange="onVis()"><div class="spt-track"></div><div class="spt-thumb"></div></label></div>
+    <div class="sp-row"><span class="sp-lbl">Admin / Area Labels</span><label class="spt" for="v-admin"><input type="checkbox" id="v-admin" onchange="onVis()"><div class="spt-track"></div><div class="spt-thumb"></div></label></div>
+    <div class="sp-row"><span class="sp-lbl">Local / Inner Roads</span><label class="spt" for="v-local"><input type="checkbox" id="v-local" onchange="onVis()"><div class="spt-track"></div><div class="spt-thumb"></div></label></div>
+    <div class="sp-row"><span class="sp-lbl">Arterial Roads</span><label class="spt" for="v-arterial"><input type="checkbox" id="v-arterial" checked onchange="onVis()"><div class="spt-track"></div><div class="spt-thumb"></div></label></div>
+    <div class="sp-row"><span class="sp-lbl">Highways</span><label class="spt" for="v-highway"><input type="checkbox" id="v-highway" checked onchange="onVis()"><div class="spt-track"></div><div class="spt-thumb"></div></label></div>
+    <div class="sp-row"><span class="sp-lbl">Road Labels</span><label class="spt" for="v-roadlabel"><input type="checkbox" id="v-roadlabel" checked onchange="onVis()"><div class="spt-track"></div><div class="spt-thumb"></div></label></div>
+    <div class="sp-row"><span class="sp-lbl">POIs</span><label class="spt" for="v-poi"><input type="checkbox" id="v-poi" onchange="onVis()"><div class="spt-track"></div><div class="spt-thumb"></div></label></div>
+    <div class="sp-row"><span class="sp-lbl">Transit</span><label class="spt" for="v-transit"><input type="checkbox" id="v-transit" onchange="onVis()"><div class="spt-track"></div><div class="spt-thumb"></div></label></div>
+    <div class="sp-row"><span class="sp-lbl">Rail Stations</span><label class="spt" for="v-rail"><input type="checkbox" id="v-rail" checked onchange="onVis()"><div class="spt-track"></div><div class="spt-thumb"></div></label></div>
   </div>
   <div class="sp-sec">
     <div class="sp-sec-title">Fine Adjustments</div>
@@ -1607,34 +1607,46 @@ out body geom;
 
   // Rate limit: min 3s between scans
   const now=Date.now();
-  if(window._lastScan && now-window._lastScan < 3000){
+  if(window._lastScan && now-window._lastScan<3000){
     status.textContent='Please wait a moment before scanning again.';
-    btn.disabled=false;btn.textContent='⌖ Scan Frame';return;
+    btn.disabled=false; btn.textContent='⌖ Scan Frame'; return;
   }
   window._lastScan=now;
-  const OVERPASS_MIRRORS=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter','https://maps.mail.ru/osm/tools/overpass/api/interpreter'];
-  let res=null;
+
+  const OVERPASS_MIRRORS=[
+    'https://overpass-api.de/api/interpreter',
+    'https://overpass.kumi.systems/api/interpreter',
+    'https://maps.mail.ru/osm/tools/overpass/api/interpreter'
+  ];
+
+  let succeeded=false;
   for(const mirror of OVERPASS_MIRRORS){
     try{
-      res=await fetch(mirror,{
-      method:'POST',
-      body: 'data=' + encodeURIComponent(query),
-      headers:{'Content-Type':'application/x-www-form-urlencoded'}
-    });
-    if(!res.ok) throw new Error('Overpass error: ' + res.status);
-    const data = await res.json();
-    osmFeatures = data.elements || [];
-    status.textContent = `Found ${osmFeatures.length} features`;
-    status.className = '';
-    renderFeatureList();
-  } catch(e){
-    status.textContent = 'Error: ' + e.message;
-    status.className = '';
-    console.error(e);
+      const res=await fetch(mirror,{
+        method:'POST',
+        body:'data='+encodeURIComponent(query),
+        headers:{'Content-Type':'application/x-www-form-urlencoded'}
+      });
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const data=await res.json();
+      osmFeatures=data.elements||[];
+      status.textContent=`Found ${osmFeatures.length} features`;
+      status.className='';
+      renderFeatureList();
+      succeeded=true;
+      break;
+    }catch(e){
+      console.warn('Mirror failed:',mirror,e.message);
+    }
   }
 
-  btn.disabled = false;
-  btn.textContent = '⌖ Scan Frame';
+  if(!succeeded){
+    status.textContent='All servers failed — check your connection and try again.';
+    status.className='';
+  }
+
+  btn.disabled=false;
+  btn.textContent='⌖ Scan Frame';
 }
 
 function categoriseFeature(f){
