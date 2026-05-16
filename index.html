@@ -233,9 +233,16 @@ input[type="range"]{accent-color:var(--gold);cursor:pointer;}
 .btn-p{background:var(--bark);color:var(--offwhite);border:none;padding:9px 24px;font-family:'Archivo',sans-serif;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;}
 .btn-p:hover{background:#5a3d2b;}
 .btn-s{background:transparent;border:1px solid var(--bark);color:var(--bark);padding:9px 24px;font-family:'Archivo',sans-serif;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;}
+/* Hide all UI until auth — shown by JS after unlock */
+#header,#stage,#draw-toolbar,#feature-panel,#statusbar,#shape-props,#hl-editor,#save-indicator{display:none!important;}
+#header.ui-ready,#stage.ui-ready,#draw-toolbar.ui-ready,#feature-panel.ui-ready,#statusbar.ui-ready,#save-indicator.ui-ready{display:flex!important;}
+#stage.ui-ready{display:block!important;}
+#feature-panel.ui-ready{display:flex!important;}
+#statusbar.ui-ready{display:flex!important;}
 </style>
 <style>
 /* ── PASSWORD GATE ── */
+/* pw-gate shows by default. All other UI hidden until auth. */
 #pw-gate{position:fixed;inset:0;background:var(--bark2);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;}
 #pw-gate h1{font-family:"Cormorant Garamond",serif;font-size:32px;font-weight:300;letter-spacing:0.18em;color:var(--sand);text-transform:uppercase;}
 #pw-gate p{font-size:11px;color:var(--accent);letter-spacing:0.08em;}
@@ -1986,11 +1993,8 @@ function hookHighlightRedraw(){
 }
 
 // ═══════════════════════════════════════════════════════
-// PASSWORD GATE — SHA-256 hashed, never stored in plain text
+// PASSWORD GATE — SHA-256, simplest reliable implementation
 // ═══════════════════════════════════════════════════════
-// This is the SHA-256 hash of the password. The actual password
-// is never stored anywhere in this file. Changing this hash
-// changes the password requirement.
 const PW_HASH='b6c6d51cf31501cc0b590a3c3fd9cdcca1bb96d65e7a8a3db149bf0d2fe98b9f';
 
 async function sha256(str){
@@ -1998,48 +2002,58 @@ async function sha256(str){
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 
+function showUI(){
+  ['header','stage','draw-toolbar','feature-panel','statusbar','save-indicator'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.classList.add('ui-ready');
+  });
+}
+
+function unlockAndLoad(){
+  // Hide gate
+  document.getElementById('pw-gate').style.display='none';
+  // Store session (24hr)
+  sha256('dem-oak-'+Math.floor(Date.now()/86400000)).then(t=>sessionStorage.setItem('dem-oak-auth',t));
+  // Show UI
+  showUI();
+  // Load maps after two paint frames so map div is fully rendered
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    setTimeout(loadMapsScript, 100);
+    window._pendingRestore=true;
+  }));
+}
+
 async function checkPassword(){
-  const val=document.getElementById('pw-input').value;
-  if(!val){document.getElementById('pw-error').textContent='Please enter the password.';return;}
-
-  // Show loading state
+  const val=document.getElementById('pw-input').value.trim();
+  if(!val)return;
   const btn=document.getElementById('pw-submit');
-  btn.textContent='Checking…'; btn.disabled=true;
-
-  const hash=await sha256(val);
-  if(hash===PW_HASH){
-    const token=await sha256('dem-oak-session-'+Math.floor(Date.now()/86400000));
-    sessionStorage.setItem('dem-oak-auth',token);
-    document.getElementById('pw-gate').style.display='none';
-    // Wait for browser to paint the visible map div before injecting Maps
-    // requestAnimationFrame ensures layout is complete, setTimeout gives extra buffer
-    requestAnimationFrame(()=>{
-      setTimeout(()=>{
-        loadMapsScript();
-        window._pendingRestore=true;
-      }, 200);
-    });
-  } else {
+  btn.textContent='…'; btn.disabled=true;
+  try{
+    const hash=await sha256(val);
+    if(hash===PW_HASH){
+      unlockAndLoad();
+    } else {
+      btn.textContent='Unlock'; btn.disabled=false;
+      const err=document.getElementById('pw-error');
+      err.textContent='Incorrect password.';
+      document.getElementById('pw-input').value='';
+      document.getElementById('pw-input').focus();
+      setTimeout(()=>err.textContent='',2500);
+    }
+  }catch(e){
     btn.textContent='Unlock'; btn.disabled=false;
-    document.getElementById('pw-error').textContent='Incorrect password.';
-    document.getElementById('pw-input').value='';
-    document.getElementById('pw-input').focus();
-    setTimeout(()=>document.getElementById('pw-error').textContent='',2500);
+    console.error('Auth error:',e);
   }
 }
 
 async function checkAuth(){
-  const stored=sessionStorage.getItem('dem-oak-auth');
-  if(!stored){ return; } // gate stays visible
-  const expected=await sha256('dem-oak-session-'+Math.floor(Date.now()/86400000));
-  if(stored===expected){
-    document.getElementById('pw-gate').style.display='none';
-    requestAnimationFrame(()=>{
-      setTimeout(()=>{
-        loadMapsScript();
-        window._pendingRestore=true;
-      }, 200);
-    });
+  try{
+    const stored=sessionStorage.getItem('dem-oak-auth');
+    if(!stored)return;
+    const expected=await sha256('dem-oak-'+Math.floor(Date.now()/86400000));
+    if(stored===expected)unlockAndLoad();
+  }catch(e){
+    console.warn('Session check failed:',e);
   }
 }
 
@@ -2326,50 +2340,26 @@ async function clearSavedState(){
 }
 
 // Check auth on page load
-// ── BOOT SEQUENCE ──────────────────────────────────────
-// 1. Open IndexedDB first (always)
-// 2. Check if session is valid
-// 3. If yes: hide gate, load maps, restore state
-// 4. If no: show gate, wait for password
-// Maps script is NEVER loaded until after auth — prevents
-// Google Maps initializing into a hidden/zero-size element
-
-async function boot(){
-  // Always open DB on load so it's ready
-  try{ await openDB(); }catch(e){ console.warn('IndexedDB unavailable:',e); }
-  // Check session
-  await checkAuth();
-}
-
 function loadMapsScript(){
-  if(window._mapsLoaded) return;
-  window._mapsLoaded = true;
+  if(window._mapsLoaded)return;
+  window._mapsLoaded=true;
   const s=document.createElement('script');
   s.src=`https://maps.googleapis.com/maps/api/js?key=${API_KEY}&callback=initMap`;
   s.async=true;
-  s.onerror=()=>{
-    document.body.insertAdjacentHTML('beforeend',
-      '<div style="position:fixed;inset:0;background:rgba(42,29,18,0.97);z-index:9998;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;color:#E2C9A8;font-family:Archivo,sans-serif;text-align:center;padding:40px">' +
-      '<p style="font-size:14px;letter-spacing:0.1em">Google Maps failed to load</p>' +
-      '<p style="font-size:11px;color:#8B6A4F;max-width:400px;line-height:1.7">Check that your API key is valid, billing is active on GCP, and <b style="color:#E2C9A8">infovichitraco-dev.github.io/*</b> is in the allowed referrers list on your API key.</p>' +
-      '<button onclick="location.reload()" style="background:#E2C9A8;color:#3D2B1F;border:none;padding:10px 24px;font-family:Archivo,sans-serif;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;margin-top:8px">Retry</button>' +
-      '</div>'
-    );
-  };
+  s.onerror=()=>alert('Google Maps failed to load. Check your API key and referrer settings in GCP.');
   document.head.appendChild(s);
 }
-// Google Maps auth failure handler (called by Maps API when key is rejected)
 window.gm_authFailure=function(){
-  document.body.insertAdjacentHTML('beforeend',
-    '<div style="position:fixed;inset:0;background:rgba(42,29,18,0.97);z-index:9998;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;color:#E2C9A8;font-family:Archivo,sans-serif;text-align:center;padding:40px">' +
-    '<p style="font-size:14px;letter-spacing:0.1em">API Key Error</p>' +
-    '<p style="font-size:11px;color:#8B6A4F;max-width:400px;line-height:1.7">Google Maps rejected the API key. Ensure <b style="color:#E2C9A8">Maps JavaScript API</b> is enabled in GCP and billing is active. If on GitHub Pages, add <b style="color:#E2C9A8">infovichitraco-dev.github.io/*</b> to allowed HTTP referrers.</p>' +
-    '<button onclick="location.reload()" style="background:#E2C9A8;color:#3D2B1F;border:none;padding:10px 24px;font-family:Archivo,sans-serif;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;margin-top:8px">Retry</button>' +
-    '</div>'
-  );
+  alert('Google Maps API key rejected. Check GCP Console — ensure Maps JavaScript API is enabled and billing is active.');
 };
 
-window.addEventListener('load', boot);
+// On page load: check if already authenticated this session
+window.addEventListener('load',()=>{
+  // Open IndexedDB in background (don't block auth)
+  openDB().catch(e=>console.warn('IndexedDB:',e));
+  // Check session
+  checkAuth();
+});
 
 // initMap is called directly by Google Maps — no wrapping needed.
 // Post-init logic is already inside initMap() above.
