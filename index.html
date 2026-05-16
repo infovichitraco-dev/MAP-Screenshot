@@ -790,7 +790,7 @@ function initMap(){
   google.maps.event.addListenerOnce(map,'idle',()=>{initCrop();updateStatus();});
 }
 
-(function(){const s=document.createElement('script');s.src=`https://maps.googleapis.com/maps/api/js?key=${API_KEY}&callback=initMap`;s.async=true;document.head.appendChild(s);})();
+// Maps script injected after auth — see loadMapsScript()
 
 // ═══════════════════════════════════════════════════════
 // CROP
@@ -1973,15 +1973,20 @@ async function sha256(str){
 async function checkPassword(){
   const val=document.getElementById('pw-input').value;
   if(!val){document.getElementById('pw-error').textContent='Please enter the password.';return;}
+
+  // Show loading state
+  const btn=document.getElementById('pw-submit');
+  btn.textContent='Checking…'; btn.disabled=true;
+
   const hash=await sha256(val);
   if(hash===PW_HASH){
-    // Store session token (hashed timestamp — not the password)
     const token=await sha256('dem-oak-session-'+Math.floor(Date.now()/86400000));
     sessionStorage.setItem('dem-oak-auth',token);
     document.getElementById('pw-gate').style.display='none';
-    await openDB();
-    restoreState();
+    loadMapsScript(); // inject Maps into now-visible div
+    window._pendingRestore=true;
   } else {
+    btn.textContent='Unlock'; btn.disabled=false;
     document.getElementById('pw-error').textContent='Incorrect password.';
     document.getElementById('pw-input').value='';
     document.getElementById('pw-input').focus();
@@ -1991,12 +1996,13 @@ async function checkPassword(){
 
 async function checkAuth(){
   const stored=sessionStorage.getItem('dem-oak-auth');
-  if(!stored){return;}
+  if(!stored){ return; } // gate stays visible
   const expected=await sha256('dem-oak-session-'+Math.floor(Date.now()/86400000));
   if(stored===expected){
     document.getElementById('pw-gate').style.display='none';
-    await openDB();
-    restoreState();
+    loadMapsScript(); // load maps NOW into visible element
+    // restoreState() is called automatically once map is idle (via hookAutosave wrapper)
+    window._pendingRestore=true;
   }
 }
 
@@ -2283,7 +2289,31 @@ async function clearSavedState(){
 }
 
 // Check auth on page load
-window.addEventListener('load',()=>checkAuth());
+// ── BOOT SEQUENCE ──────────────────────────────────────
+// 1. Open IndexedDB first (always)
+// 2. Check if session is valid
+// 3. If yes: hide gate, load maps, restore state
+// 4. If no: show gate, wait for password
+// Maps script is NEVER loaded until after auth — prevents
+// Google Maps initializing into a hidden/zero-size element
+
+async function boot(){
+  // Always open DB on load so it's ready
+  try{ await openDB(); }catch(e){ console.warn('IndexedDB unavailable:',e); }
+  // Check session
+  await checkAuth();
+}
+
+function loadMapsScript(){
+  if(window._mapsLoaded) return;
+  window._mapsLoaded = true;
+  const s=document.createElement('script');
+  s.src=`https://maps.googleapis.com/maps/api/js?key=${API_KEY}&callback=initMap`;
+  s.async=true;
+  document.head.appendChild(s);
+}
+
+window.addEventListener('load', boot);
 
 // Hook autosave after map is ready
 const _origInitMap=initMap;
