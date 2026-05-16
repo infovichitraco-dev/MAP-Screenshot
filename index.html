@@ -179,9 +179,38 @@ input[type="range"]{accent-color:var(--gold);cursor:pointer;}
 .btn-p:hover{background:#5a3d2b;}
 .btn-s{background:transparent;border:1px solid var(--bark);color:var(--bark);padding:9px 24px;font-family:'Archivo',sans-serif;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;}
 </style>
+<style>
+/* ── PASSWORD GATE ── */
+#pw-gate{position:fixed;inset:0;background:var(--bark2);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;}
+#pw-gate h1{font-family:"Cormorant Garamond",serif;font-size:32px;font-weight:300;letter-spacing:0.18em;color:var(--sand);text-transform:uppercase;}
+#pw-gate p{font-size:11px;color:var(--accent);letter-spacing:0.08em;}
+#pw-gate em{font-style:italic;color:var(--sand);}
+#pw-wrap{display:flex;gap:0;}
+#pw-input{background:rgba(245,238,230,0.06);border:1px solid var(--border);border-right:none;color:var(--offwhite);font-family:"Archivo",sans-serif;font-size:13px;padding:10px 16px;width:260px;outline:none;letter-spacing:0.06em;border-radius:0;}
+#pw-input::placeholder{color:rgba(226,201,168,0.3);}
+#pw-submit{background:var(--sand);color:var(--bark);border:none;padding:10px 20px;font-family:"Archivo",sans-serif;font-size:10px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;}
+#pw-submit:hover{background:var(--offwhite);}
+#pw-error{font-size:10px;color:#e88;letter-spacing:0.08em;min-height:16px;}
+/* ── AUTOSAVE INDICATOR ── */
+#save-indicator{position:fixed;bottom:36px;right:12px;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(226,201,168,0.35);z-index:600;transition:color 0.3s;pointer-events:none;}
+#save-indicator.saving{color:var(--gold);}
+#save-indicator.saved{color:rgba(201,169,110,0.5);}
+</style>
 </head>
 <body>
 
+<!-- PASSWORD GATE -->
+<div id="pw-gate">
+  <h1>DEM <em>Oak</em></h1>
+  <p>Map Studio &nbsp;·&nbsp; Restricted Access</p>
+  <div id="pw-wrap">
+    <input type="password" id="pw-input" placeholder="Enter password…" onkeydown="if(event.key==='Enter')checkPassword()">
+    <button id="pw-submit" onclick="checkPassword()">Unlock</button>
+  </div>
+  <div id="pw-error"></div>
+</div>
+<!-- AUTOSAVE INDICATOR -->
+<div id="save-indicator">Auto-saved</div>
 <!-- HEADER -->
 <div id="header">
   <div class="logo">DEM <em>Oak</em></div>
@@ -201,6 +230,12 @@ input[type="range"]{accent-color:var(--gold);cursor:pointer;}
     </span>
   </div>
   <div class="sep"></div>
+  <div class="cg">
+    <span class="cl">Fine Zoom</span>
+    <input type="range" id="fine-zoom" min="0.5" max="1.5" step="0.01" value="1" oninput="applyFineZoom(this.value)" style="width:80px">
+    <span class="qval" id="fine-zoom-val">1.00&times;</span>
+    <button onclick="resetFineZoom()" style="background:none;border:none;color:var(--accent);font-size:9px;cursor:pointer;padding:0 2px" title="Reset">↺</button>
+  </div>
   <button id="drop-btn" onclick="document.getElementById('file-input').click()">+ Add PNG</button>
   <input type="file" id="file-input" accept="image/*" multiple onchange="onFileSelect(this)">
   <div id="marker-controls">
@@ -456,7 +491,7 @@ input[type="range"]{accent-color:var(--gold);cursor:pointer;}
   <span>Zoom <b id="sb-z">—</b></span>
   <span>Markers <b id="sb-m">0</b></span>
   <span>Shapes <b id="sb-s">0</b></span>
-  <span class="sb-hint">Select tool to move shapes · Draw tools to add · Click shape to edit properties</span>
+  <span class="sb-hint">Select tool to move shapes · Draw tools to add · Click shape to edit properties</span><button onclick="clearSavedState()" style="margin-left:12px;background:none;border:none;color:rgba(226,201,168,0.25);font-size:8px;letter-spacing:0.1em;cursor:pointer;text-transform:uppercase;padding:0" title="Clear saved state &amp; reset">↺ Clear Save</button>
 </div>
 
 <!-- EXPORT MODAL -->
@@ -1253,9 +1288,253 @@ async function startTileExport(){
   }
 }
 
+
+// ── FINE ZOOM (CSS scale between Google Map integer zoom levels) ──
+let fineZoom=1.0;
+function applyFineZoom(val){
+  fineZoom=parseFloat(val);
+  document.getElementById("fine-zoom-val").textContent=fineZoom.toFixed(2)+"×";
+  const mapEl=document.getElementById("map");
+  // Scale from center — map stays centered while scaling
+  mapEl.style.transformOrigin="center center";
+  mapEl.style.transform=fineZoom===1?"":"scale("+fineZoom+")";
+  // Also scale the SVG and overlay layers so shapes/markers stay aligned
+  const svgEl=document.getElementById("svg-layer");
+  const overlayEl=document.getElementById("overlay-layer");
+  svgEl.style.transformOrigin="center center";
+  overlayEl.style.transformOrigin="center center";
+  svgEl.style.transform=fineZoom===1?"":"scale("+fineZoom+")";
+  overlayEl.style.transform=fineZoom===1?"":"scale("+fineZoom+")";
+}
+function resetFineZoom(){
+  document.getElementById("fine-zoom").value=1;
+  applyFineZoom(1);
+}
 function setProg(p){document.getElementById('prog-f').style.width=p+'%';}
 function setSt(m){document.getElementById('m-status').textContent=m;document.getElementById('prog-label').textContent=m;}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+// ═══════════════════════════════════════════════════════
+// PASSWORD GATE — SHA-256 hashed, never stored in plain text
+// ═══════════════════════════════════════════════════════
+// This is the SHA-256 hash of the password. The actual password
+// is never stored anywhere in this file. Changing this hash
+// changes the password requirement.
+const PW_HASH='b6c6d51cf31501cc0b590a3c3fd9cdcca1bb96d65e7a8a3db149bf0d2fe98b9f';
+
+async function sha256(str){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function checkPassword(){
+  const val=document.getElementById('pw-input').value;
+  if(!val){document.getElementById('pw-error').textContent='Please enter the password.';return;}
+  const hash=await sha256(val);
+  if(hash===PW_HASH){
+    // Store session token (hashed timestamp — not the password)
+    const token=await sha256('dem-oak-session-'+new Date().toDateString());
+    sessionStorage.setItem('dem-oak-auth',token);
+    document.getElementById('pw-gate').style.display='none';
+    restoreState();
+  } else {
+    document.getElementById('pw-error').textContent='Incorrect password.';
+    document.getElementById('pw-input').value='';
+    document.getElementById('pw-input').focus();
+    setTimeout(()=>document.getElementById('pw-error').textContent='',2500);
+  }
+}
+
+async function checkAuth(){
+  const stored=sessionStorage.getItem('dem-oak-auth');
+  if(!stored){return;}
+  const expected=await sha256('dem-oak-session-'+new Date().toDateString());
+  if(stored===expected){
+    document.getElementById('pw-gate').style.display='none';
+    restoreState();
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// AUTO-SAVE SYSTEM
+// ═══════════════════════════════════════════════════════
+const SAVE_KEY='dem-oak-studio-state';
+let saveTimer=null;
+
+function scheduleSave(){
+  clearTimeout(saveTimer);
+  const ind=document.getElementById('save-indicator');
+  ind.textContent='Saving…';ind.className='saving';
+  saveTimer=setTimeout(()=>saveState(),1200);
+}
+
+function saveState(){
+  if(!map)return;
+  const center=map.getCenter();
+  // Serialize shapes (store SVG path/attributes + props)
+  const shapeData=shapes.map(s=>{
+    const el=s.el;
+    const tag=el.tagName;
+    const attrs={};
+    for(const a of el.attributes)attrs[a.name]=a.value;
+    return{id:s.id,type:s.type,tag,attrs,props:s.props};
+  });
+  // Serialize markers (store as base64 src + position)
+  const markerData=markers.map(m=>({src:m.src,x:m.x,y:m.y,w:m.w,h:m.h}));
+
+  const state={
+    v:2, // version
+    ts:Date.now(),
+    map:{lat:center.lat(),lng:center.lng(),zoom:map.getZoom()},
+    fineZoom:parseFloat(document.getElementById('fine-zoom').value),
+    aspect:document.getElementById('aspect').value,
+    SC:{...SC},SA:{...SA},SV:{...SV},
+    shapes:shapeData,
+    markers:markerData
+  };
+  try{
+    localStorage.setItem(SAVE_KEY,JSON.stringify(state));
+    const ind=document.getElementById('save-indicator');
+    const d=new Date();
+    ind.textContent='Saved '+d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
+    ind.className='saved';
+  }catch(e){
+    console.warn('AutoSave failed (storage full?)');
+    document.getElementById('save-indicator').textContent='Save failed';
+  }
+}
+
+function restoreState(){
+  const raw=localStorage.getItem(SAVE_KEY);
+  if(!raw)return;
+  let state;
+  try{state=JSON.parse(raw);}catch(e){return;}
+  if(!state||state.v!==2)return;
+
+  // Restore map position (wait for map to be ready)
+  const tryRestore=()=>{
+    if(!map){setTimeout(tryRestore,200);return;}
+    map.setCenter({lat:state.map.lat,lng:state.map.lng});
+    map.setZoom(state.map.zoom);
+
+    // Restore style
+    if(state.SC)Object.assign(SC,state.SC);
+    if(state.SA)Object.assign(SA,state.SA);
+    if(state.SV)Object.assign(SV,state.SV);
+    // Sync style panel UI
+    Object.entries(SC).forEach(([k,v])=>{
+      const ci=document.getElementById('c-'+k),hi=document.getElementById('h-'+k);
+      if(ci)ci.value=v;if(hi)hi.textContent=v;
+    });
+    [['wl',SA.wl],['ws',SA.ws],['rl',SA.rl],['rs',SA.rs]].forEach(([k,v])=>{
+      const el=document.getElementById('a-'+k),av=document.getElementById('av-'+k);
+      if(el)el.value=v;if(av)av.textContent=v;
+    });
+    Object.entries(SV).forEach(([k,v])=>{
+      const el=document.getElementById('v-'+k);if(el)el.checked=v;
+    });
+    applyStyle();
+
+    // Restore aspect
+    if(state.aspect){
+      document.getElementById('aspect').value=state.aspect;
+      onAspectChange();
+    }
+
+    // Restore fine zoom
+    if(state.fineZoom&&state.fineZoom!==1){
+      document.getElementById('fine-zoom').value=state.fineZoom;
+      applyFineZoom(state.fineZoom);
+    }
+
+    // Restore markers
+    if(state.markers){
+      state.markers.forEach(m=>spawnMarkerDirect(m.src,m.x,m.y,m.w,m.h));
+    }
+
+    // Restore shapes
+    if(state.shapes){
+      state.shapes.forEach(sd=>{
+        const ns='http://www.w3.org/2000/svg';
+        const g=document.createElementNS(ns,'g');
+        g.setAttribute('class','shape-wrap');
+        g.setAttribute('data-id',sd.id);
+        const el=document.createElementNS(ns,sd.tag);
+        Object.entries(sd.attrs).forEach(([k,v])=>el.setAttribute(k,v));
+        g.appendChild(el);
+        document.getElementById('shapes-group').appendChild(g);
+        const shapeData={id:sd.id,el,g,type:sd.type,props:{...sd.props}};
+        shapes.push(shapeData);
+        g.addEventListener('mousedown',ev=>{
+          if(currentTool!=='select')return;
+          ev.stopPropagation();selectShape(shapeData);
+        });
+      });
+    }
+
+    updateStatus();
+    const ind=document.getElementById('save-indicator');
+    const d=new Date(state.ts);
+    ind.textContent='Restored '+d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
+    ind.className='saved';
+  };
+  tryRestore();
+}
+
+// Spawn marker without spawning to center (used by restore)
+function spawnMarkerDirect(src,x,y,w,h){
+  const layer=document.getElementById('overlay-layer');
+  const el=document.createElement('div');el.className='map-marker';
+  const img=document.createElement('img');img.src=src;img.draggable=false;
+  const handle=document.createElement('div');handle.className='resize-handle';
+  el.appendChild(img);el.appendChild(handle);layer.appendChild(el);
+  const m={el,img,x,y,w,h,src};
+  markers.push(m);applyPos(m);bindMarker(m,handle);
+}
+
+// Hook auto-save into all state-changing actions
+function hookAutosave(){
+  // Map movement
+  if(map){
+    map.addListener('dragend',scheduleSave);
+    map.addListener('zoom_changed',scheduleSave);
+  }
+  // MutationObserver on shapes group — fires on any SVG change
+  const observer=new MutationObserver(scheduleSave);
+  observer.observe(document.getElementById('shapes-group'),{childList:true,subtree:true,attributes:true});
+  // Style panel inputs
+  document.querySelectorAll('#style-panel input,#style-panel select').forEach(el=>{
+    el.addEventListener('input',scheduleSave);
+    el.addEventListener('change',scheduleSave);
+  });
+  // Shape props panel
+  document.querySelectorAll('#shape-props input,#shape-props select').forEach(el=>{
+    el.addEventListener('input',scheduleSave);
+    el.addEventListener('change',scheduleSave);
+  });
+  // Fine zoom
+  document.getElementById('fine-zoom').addEventListener('input',scheduleSave);
+}
+
+// Clear saved state (useful for fresh start)
+function clearSavedState(){
+  if(confirm('Clear all saved state and start fresh?')){
+    localStorage.removeItem(SAVE_KEY);
+    location.reload();
+  }
+}
+
+// Check auth on page load
+window.addEventListener('load',()=>checkAuth());
+
+// Hook autosave after map is ready
+const _origInitMap=initMap;
+initMap=function(){
+  _origInitMap();
+  google.maps.event.addListenerOnce(map,'idle',()=>{
+    setTimeout(hookAutosave,500);
+  });
+};
 </script>
 </body>
 </html>
