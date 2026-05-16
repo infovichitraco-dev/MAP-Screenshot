@@ -2011,8 +2011,14 @@ async function checkPassword(){
     const token=await sha256('dem-oak-session-'+Math.floor(Date.now()/86400000));
     sessionStorage.setItem('dem-oak-auth',token);
     document.getElementById('pw-gate').style.display='none';
-    loadMapsScript(); // inject Maps into now-visible div
-    window._pendingRestore=true;
+    // Wait for browser to paint the visible map div before injecting Maps
+    // requestAnimationFrame ensures layout is complete, setTimeout gives extra buffer
+    requestAnimationFrame(()=>{
+      setTimeout(()=>{
+        loadMapsScript();
+        window._pendingRestore=true;
+      }, 200);
+    });
   } else {
     btn.textContent='Unlock'; btn.disabled=false;
     document.getElementById('pw-error').textContent='Incorrect password.';
@@ -2028,9 +2034,12 @@ async function checkAuth(){
   const expected=await sha256('dem-oak-session-'+Math.floor(Date.now()/86400000));
   if(stored===expected){
     document.getElementById('pw-gate').style.display='none';
-    loadMapsScript(); // load maps NOW into visible element
-    // restoreState() is called automatically once map is idle (via hookAutosave wrapper)
-    window._pendingRestore=true;
+    requestAnimationFrame(()=>{
+      setTimeout(()=>{
+        loadMapsScript();
+        window._pendingRestore=true;
+      }, 200);
+    });
   }
 }
 
