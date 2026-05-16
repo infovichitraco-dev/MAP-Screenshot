@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Map Test</title>
+<style>
+body{margin:0;background:#111;}
+#map{width:100vw;height:100vh;}
+#status{position:fixed;top:10px;left:10px;background:rgba(0,0,0,0.8);color:#fff;padding:10px 16px;font-family:monospace;font-size:13px;z-index:999;border-radius:4px;}
+</style>
+</head>
+<body>
+<div id="status">Loading Google Maps…</div>
+<div id="map"></div>
+<script>
+window.gm_authFailure = function(){
+  document.getElementById('status').style.background='#c00';
+  document.getElementById('status').textContent='AUTH FAILED — API key rejected by Google. Check GCP Console.';
+};
+
+function initMap(){
+  document.getElementById('status').style.background='#080';
+  document.getElementById('status').textContent='Map loaded successfully!';
+  new google.maps.Map(document.getElementById('map'),{
+    center:{lat:19.2330,lng:72.8580},
+    zoom:14
+  });
+}
+</script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLzi_xut6Y6lgShdOkPCePTXreCqUBJVo&callback=initMap" async></script>
+</body>
+</html>
