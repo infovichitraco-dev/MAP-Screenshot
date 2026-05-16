@@ -34,20 +34,75 @@ input[type="range"]{accent-color:var(--gold);cursor:pointer;}
 #btn-export{margin-left:auto;background:var(--sand);color:var(--bark);border:none;padding:8px 20px;font-family:'Archivo',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;transition:background 0.15s;flex-shrink:0;}
 #btn-export:hover{background:var(--offwhite);}
 
-/* ── DRAWING TOOLBAR (left sidebar) ── */
-#draw-toolbar{position:fixed;left:0;top:52px;bottom:28px;width:48px;background:var(--panel);border-right:1px solid var(--border);z-index:450;display:flex;flex-direction:column;align-items:center;padding:10px 0;gap:4px;transition:left 0.3s;}
-.dt-group{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;border-bottom:1px solid var(--border);width:100%;}
-.dt-group:last-child{border-bottom:none;}
-.dt-btn{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border:1px solid transparent;background:transparent;color:rgba(226,201,168,0.5);cursor:pointer;border-radius:3px;transition:all 0.15s;font-size:14px;position:relative;}
+
+/* ── OSM FEATURE PANEL ── */
+#feature-panel{position:fixed;left:0;top:52px;bottom:28px;width:260px;background:var(--panel);border-right:1px solid var(--border);z-index:450;display:flex;flex-direction:column;transition:left 0.3s;}
+#feature-panel.collapsed{left:-212px;}
+#fp-toggle{position:absolute;right:-13px;top:50%;transform:translateY(-50%);width:13px;height:48px;background:var(--panel);border:1px solid var(--border);border-left:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--accent);z-index:1;}
+#fp-toggle:hover{color:var(--sand);}
+#fp-head{padding:12px 14px 10px;border-bottom:1px solid var(--border);flex-shrink:0;}
+#fp-head h3{font-family:'Cormorant Garamond',serif;font-size:13px;font-weight:300;letter-spacing:0.1em;color:var(--sand);margin-bottom:2px;}
+#fp-head p{font-size:8px;color:var(--accent);letter-spacing:0.08em;}
+#fp-toolbar{display:flex;gap:6px;padding:8px 14px;border-bottom:1px solid var(--border);flex-shrink:0;}
+#fp-scan-btn{flex:1;background:var(--sand);color:var(--bark);border:none;font-family:'Archivo',sans-serif;font-size:8px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;padding:6px 8px;cursor:pointer;transition:background 0.15s;}
+#fp-scan-btn:hover{background:var(--offwhite);}
+#fp-scan-btn:disabled{opacity:0.5;cursor:not-allowed;}
+#fp-clear-btn{background:rgba(226,201,168,0.08);border:1px solid var(--border);color:var(--sand);font-family:'Archivo',sans-serif;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;padding:6px 8px;cursor:pointer;}
+#fp-clear-btn:hover{background:rgba(226,201,168,0.18);}
+#fp-status{padding:6px 14px;font-size:8px;color:var(--accent);letter-spacing:0.06em;flex-shrink:0;min-height:22px;}
+#fp-status.loading{color:var(--gold);}
+#fp-list{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--accent) transparent;}
+#fp-list::-webkit-scrollbar{width:3px;}
+#fp-list::-webkit-scrollbar-thumb{background:var(--accent);}
+.fp-group{border-bottom:1px solid var(--border);}
+.fp-group-header{display:flex;align-items:center;gap:6px;padding:7px 14px;cursor:pointer;user-select:none;}
+.fp-group-header:hover{background:rgba(226,201,168,0.04);}
+.fp-group-icon{font-size:11px;width:16px;text-align:center;}
+.fp-group-name{font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold);flex:1;}
+.fp-group-count{font-size:8px;color:var(--accent);font-family:monospace;}
+.fp-group-arrow{font-size:8px;color:var(--accent);transition:transform 0.15s;}
+.fp-group.open .fp-group-arrow{transform:rotate(90deg);}
+.fp-items{display:none;padding:0 0 4px 0;}
+.fp-group.open .fp-items{display:block;}
+.fp-item{display:flex;align-items:center;gap:6px;padding:5px 14px 5px 28px;cursor:pointer;transition:background 0.1s;}
+.fp-item:hover{background:rgba(226,201,168,0.06);}
+.fp-item.highlighted{background:rgba(201,169,110,0.1);}
+.fp-item-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;border:1px solid rgba(245,238,230,0.2);}
+.fp-item-name{font-size:9px;color:rgba(245,238,230,0.7);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.fp-item-type{font-size:7px;color:var(--accent);letter-spacing:0.06em;flex-shrink:0;}
+/* highlight editor — slides up when item selected */
+#hl-editor{position:fixed;left:0;bottom:28px;width:260px;background:var(--panel);border-top:1px solid var(--border);border-right:1px solid var(--border);z-index:460;transform:translateY(100%);transition:transform 0.2s;}
+#hl-editor.open{transform:translateY(0);}
+#hl-editor-inner{padding:12px 14px;display:flex;flex-direction:column;gap:8px;}
+.hl-title{font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;justify-content:space-between;}
+.hl-name{font-size:10px;color:var(--sand);font-family:'Cormorant Garamond',serif;font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;}
+.hl-row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.hl-lbl{font-size:9px;color:rgba(245,238,230,0.55);white-space:nowrap;}
+.hl-color{display:flex;align-items:center;gap:5px;}
+.hl-color input[type="color"]{width:24px;height:20px;padding:1px 2px;border:1px solid var(--border);background:transparent;cursor:pointer;border-radius:2px;}
+.hl-hex{font-size:8px;color:var(--accent);font-family:monospace;width:46px;}
+.hl-range{display:flex;align-items:center;gap:5px;}
+.hl-range input[type="range"]{width:90px;accent-color:var(--gold);}
+.hl-range span{font-size:8px;color:var(--accent);min-width:28px;font-family:monospace;text-align:right;}
+.hl-sel{background:rgba(245,238,230,0.06);border:1px solid var(--border);color:var(--offwhite);font-family:'Archivo',sans-serif;font-size:8px;padding:3px 5px;border-radius:1px;outline:none;cursor:pointer;}
+.hl-sel option{background:#2a1d12;}
+.hl-remove{background:rgba(200,60,60,0.15);border:1px solid rgba(200,60,60,0.35);color:#e88;font-family:'Archivo',sans-serif;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;padding:4px 10px;cursor:pointer;width:100%;}
+.hl-remove:hover{background:rgba(200,60,60,0.3);}
+/* floating drawing toolbar */
+#draw-toolbar{position:fixed;left:50%;bottom:44px;transform:translateX(-50%);background:var(--panel);border:1px solid var(--border);z-index:450;display:flex;align-items:center;padding:4px 6px;gap:2px;border-radius:4px;box-shadow:0 4px 20px rgba(0,0,0,0.4);}
+.dt-group{display:flex;align-items:center;gap:2px;padding:0 4px;border-right:1px solid var(--border);}
+.dt-group:last-child{border-right:none;padding-right:0;}
+.dt-btn{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border:1px solid transparent;background:transparent;color:rgba(226,201,168,0.5);cursor:pointer;border-radius:3px;transition:all 0.15s;font-size:13px;position:relative;}
 .dt-btn:hover{background:rgba(226,201,168,0.1);color:var(--sand);}
 .dt-btn.active{background:rgba(201,169,110,0.2);border-color:var(--gold);color:var(--gold);}
-.dt-tip{position:absolute;left:42px;top:50%;transform:translateY(-50%);background:var(--bark);color:var(--sand);font-size:9px;letter-spacing:0.08em;padding:3px 8px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity 0.15s;z-index:999;border:1px solid var(--border);}
+.dt-tip{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);background:var(--bark);color:var(--sand);font-size:8px;letter-spacing:0.08em;padding:3px 8px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity 0.15s;z-index:999;border:1px solid var(--border);}
 .dt-btn:hover .dt-tip{opacity:1;}
-
-/* ── STAGE ── */
-#stage{position:fixed;top:52px;left:48px;right:0;bottom:28px;overflow:hidden;transition:right 0.3s,left 0.3s;}
+/* stage moves right when panel open */
+#stage{position:fixed;top:52px;left:260px;right:0;bottom:28px;overflow:hidden;transition:right 0.3s,left 0.3s;}
 #stage.panel-open{right:300px;}
-#map{width:100%;height:100%;}
+#stage.fp-collapsed{left:48px;}
+#shape-props{left:260px;}
+
 
 /* ── OVERLAY LAYER (PNG markers) ── */
 #overlay-layer{position:absolute;inset:0;pointer-events:none;z-index:10;}
@@ -79,7 +134,7 @@ input[type="range"]{accent-color:var(--gold);cursor:pointer;}
 #crop-px{position:absolute;bottom:-22px;right:-2px;font-size:9px;color:var(--gold);letter-spacing:0.06em;pointer-events:none;}
 
 /* ── SHAPE PROPERTIES PANEL ── */
-#shape-props{position:fixed;bottom:28px;left:48px;width:280px;background:var(--panel);border:1px solid var(--border);border-left:none;border-bottom:none;z-index:460;transform:translateY(100%);transition:transform 0.25s;overflow:hidden;}
+#shape-props{position:fixed;bottom:28px;left:260px;width:280px;background:var(--panel);border:1px solid var(--border);border-left:none;border-bottom:none;z-index:460;transform:translateY(100%);transition:transform 0.25s;overflow:hidden;}
 #shape-props.open{transform:translateY(0);}
 #shape-props-inner{padding:14px 16px;display:flex;flex-direction:column;gap:10px;}
 .pp-title{font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);margin-bottom:2px;display:flex;align-items:center;justify-content:space-between;}
@@ -249,68 +304,147 @@ input[type="range"]{accent-color:var(--gold);cursor:pointer;}
   <button id="btn-export" onclick="openExportModal()">Export Map</button>
 </div>
 
-<!-- DRAWING TOOLBAR -->
+<!-- OSM FEATURE PANEL -->
+<div id="feature-panel">
+  <button id="fp-toggle" onclick="toggleFeaturePanel()" title="Collapse/Expand">&#9664;</button>
+  <div id="fp-head">
+    <h3>Map Features</h3>
+    <p>Roads, waterways &amp; landmarks in frame</p>
+  </div>
+  <div id="fp-toolbar">
+    <button id="fp-scan-btn" onclick="scanFeatures()">&#9740; Scan Frame</button>
+    <button id="fp-clear-btn" onclick="clearHighlights()">Clear All</button>
+  </div>
+  <div id="fp-status">Pan map, then click Scan Frame</div>
+  <div id="fp-list"></div>
+</div>
+
+<!-- HIGHLIGHT EDITOR -->
+<div id="hl-editor">
+  <div id="hl-editor-inner">
+    <div class="hl-title">
+      <span>Highlight Editor</span>
+      <button class="pp-close" onclick="closeHlEditor()">&#10005;</button>
+    </div>
+    <div class="hl-name" id="hl-name">—</div>
+    <div class="hl-row">
+      <span class="hl-lbl">Color</span>
+      <div class="hl-color">
+        <input type="color" id="hl-color" value="#E2C9A8" oninput="updateHighlight()">
+        <span class="hl-hex" id="hl-hex">#E2C9A8</span>
+      </div>
+    </div>
+    <div class="hl-row">
+      <span class="hl-lbl">Width</span>
+      <div class="hl-range">
+        <input type="range" id="hl-width" min="1" max="20" value="4" oninput="updateHighlight()">
+        <span id="hl-width-v">4px</span>
+      </div>
+    </div>
+    <div class="hl-row">
+      <span class="hl-lbl">Opacity</span>
+      <div class="hl-range">
+        <input type="range" id="hl-opacity" min="10" max="100" value="80" oninput="updateHighlight()">
+        <span id="hl-opacity-v">80%</span>
+      </div>
+    </div>
+    <div class="hl-row">
+      <span class="hl-lbl">Style</span>
+      <select class="hl-sel" id="hl-style" onchange="updateHighlight()">
+        <option value="solid">Solid</option>
+        <option value="dashed">Dashed</option>
+        <option value="dotted">Dotted</option>
+        <option value="double">Double</option>
+      </select>
+    </div>
+    <div class="hl-row">
+      <span class="hl-lbl">Cap</span>
+      <select class="hl-sel" id="hl-cap" onchange="updateHighlight()">
+        <option value="round">Round</option>
+        <option value="square">Square</option>
+        <option value="butt">Flat</option>
+      </select>
+    </div>
+    <div class="hl-row">
+      <span class="hl-lbl">Glow</span>
+      <div class="hl-range">
+        <input type="range" id="hl-glow" min="0" max="20" value="0" oninput="updateHighlight()">
+        <span id="hl-glow-v">0px</span>
+      </div>
+    </div>
+    <div class="hl-row">
+      <span class="hl-lbl">Label</span>
+      <label class="pp-toggle"><input type="checkbox" id="hl-label" onchange="updateHighlight()"><div class="pp-t-track"></div><div class="pp-t-thumb"></div></label>
+    </div>
+    <div class="hl-row">
+      <span class="hl-lbl">Label Color</span>
+      <div class="hl-color">
+        <input type="color" id="hl-label-color" value="#3D2B1F" oninput="updateHighlight()">
+        <span class="hl-hex" id="hl-label-hex">#3D2B1F</span>
+      </div>
+    </div>
+    <button class="hl-remove" onclick="removeHighlight()">Remove Highlight</button>
+  </div>
+</div>
+
+<!-- DRAWING TOOLBAR (floating) -->
 <div id="draw-toolbar">
-  <!-- Select -->
   <div class="dt-group">
-    <button class="dt-btn active" id="tool-select" onclick="setTool('select')" title="Select">
-      &#9654;<span class="dt-tip">Select / Move</span>
+    <button class="dt-btn active" id="tool-select" onclick="setTool('select')">
+      &#9654;<span class="dt-tip">Select (V)</span>
     </button>
   </div>
-  <!-- Shapes -->
   <div class="dt-group">
-    <button class="dt-btn" id="tool-rect" onclick="setTool('rect')" title="Rectangle">
-      <svg width="16" height="16"><rect x="1" y="3" width="14" height="10" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
-      <span class="dt-tip">Rectangle</span>
+    <button class="dt-btn" id="tool-rect" onclick="setTool('rect')">
+      <svg width="14" height="14"><rect x="1" y="2" width="12" height="9" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+      <span class="dt-tip">Rectangle (R)</span>
     </button>
-    <button class="dt-btn" id="tool-square" onclick="setTool('square')" title="Square">
-      <svg width="16" height="16"><rect x="2" y="2" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+    <button class="dt-btn" id="tool-square" onclick="setTool('square')">
+      <svg width="14" height="14"><rect x="2" y="2" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
       <span class="dt-tip">Square</span>
     </button>
-    <button class="dt-btn" id="tool-ellipse" onclick="setTool('ellipse')" title="Ellipse">
-      <svg width="16" height="16"><ellipse cx="8" cy="8" rx="7" ry="5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
-      <span class="dt-tip">Ellipse / Oval</span>
+    <button class="dt-btn" id="tool-ellipse" onclick="setTool('ellipse')">
+      <svg width="14" height="14"><ellipse cx="7" cy="7" rx="6" ry="4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+      <span class="dt-tip">Ellipse (O)</span>
     </button>
-    <button class="dt-btn" id="tool-circle" onclick="setTool('circle')" title="Circle">
-      <svg width="16" height="16"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+    <button class="dt-btn" id="tool-circle" onclick="setTool('circle')">
+      <svg width="14" height="14"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
       <span class="dt-tip">Circle</span>
     </button>
   </div>
-  <!-- Lines -->
   <div class="dt-group">
-    <button class="dt-btn" id="tool-line" onclick="setTool('line')" title="Line">
-      <svg width="16" height="16"><line x1="2" y1="14" x2="14" y2="2" stroke="currentColor" stroke-width="1.5"/></svg>
-      <span class="dt-tip">Straight Line</span>
+    <button class="dt-btn" id="tool-line" onclick="setTool('line')">
+      <svg width="14" height="14"><line x1="2" y1="12" x2="12" y2="2" stroke="currentColor" stroke-width="1.5"/></svg>
+      <span class="dt-tip">Line (L)</span>
     </button>
-    <button class="dt-btn" id="tool-arrow" onclick="setTool('arrow')" title="Arrow">
-      <svg width="16" height="16"><line x1="2" y1="14" x2="12" y2="4" stroke="currentColor" stroke-width="1.5" marker-end="url(#ah)"/><defs><marker id="ah" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="currentColor"/></marker></defs></svg>
-      <span class="dt-tip">Arrow</span>
+    <button class="dt-btn" id="tool-arrow" onclick="setTool('arrow')">
+      <svg width="14" height="14"><line x1="2" y1="12" x2="11" y2="3" stroke="currentColor" stroke-width="1.5"/><polygon points="11,3 7,5 9,7" fill="currentColor"/></svg>
+      <span class="dt-tip">Arrow (A)</span>
     </button>
-    <button class="dt-btn" id="tool-curve" onclick="setTool('curve')" title="Curve">
-      <svg width="16" height="16"><path d="M2,14 Q8,2 14,14" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
-      <span class="dt-tip">Curved Line</span>
+    <button class="dt-btn" id="tool-curve" onclick="setTool('curve')">
+      <svg width="14" height="14"><path d="M2,12 Q7,2 12,12" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+      <span class="dt-tip">Curve</span>
     </button>
-    <button class="dt-btn" id="tool-dashed" onclick="setTool('dashed')" title="Dashed">
-      <svg width="16" height="16"><line x1="2" y1="8" x2="14" y2="8" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3,2"/></svg>
-      <span class="dt-tip">Dashed Line</span>
+    <button class="dt-btn" id="tool-dashed" onclick="setTool('dashed')">
+      <svg width="14" height="14"><line x1="2" y1="7" x2="12" y2="7" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3,2"/></svg>
+      <span class="dt-tip">Dashed</span>
     </button>
   </div>
-  <!-- Actions -->
-  <div class="dt-group" style="margin-top:auto">
-    <button class="dt-btn" onclick="deleteShape()" title="Delete">
-      <svg width="16" height="16"><line x1="3" y1="3" x2="13" y2="13" stroke="currentColor" stroke-width="1.5"/><line x1="13" y1="3" x2="3" y2="13" stroke="currentColor" stroke-width="1.5"/></svg>
-      <span class="dt-tip">Delete Selected</span>
+  <div class="dt-group">
+    <button class="dt-btn" onclick="deleteShape()">
+      <svg width="14" height="14"><line x1="3" y1="3" x2="11" y2="11" stroke="currentColor" stroke-width="1.5"/><line x1="11" y1="3" x2="3" y2="11" stroke="currentColor" stroke-width="1.5"/></svg>
+      <span class="dt-tip">Delete (Del)</span>
     </button>
-    <button class="dt-btn" onclick="duplicateShape()" title="Duplicate">
-      <svg width="16" height="16"><rect x="5" y="5" width="9" height="9" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="2" y="2" width="9" height="9" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
-      <span class="dt-tip">Duplicate</span>
+    <button class="dt-btn" onclick="duplicateShape()">
+      <svg width="14" height="14"><rect x="4" y="4" width="8" height="8" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="2" y="2" width="8" height="8" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+      <span class="dt-tip">Duplicate (⌘D)</span>
     </button>
-    <button class="dt-btn" onclick="bringForward()" title="Forward">
-      <svg width="16" height="16"><text y="12" font-size="11" fill="currentColor">↑</text></svg>
+    <button class="dt-btn" onclick="bringForward()">
+      <svg width="14" height="14"><text y="11" font-size="10" fill="currentColor">↑</text></svg>
       <span class="dt-tip">Bring Forward</span>
     </button>
-    <button class="dt-btn" onclick="sendBackward()" title="Backward">
-      <svg width="16" height="16"><text y="12" font-size="11" fill="currentColor">↓</text></svg>
+    <button class="dt-btn" onclick="sendBackward()">
+      <svg width="14" height="14"><text y="11" font-size="10" fill="currentColor">↓</text></svg>
       <span class="dt-tip">Send Backward</span>
     </button>
   </div>
@@ -898,9 +1032,11 @@ function applyDefaultSize(el,pt){
 }
 
 function finaliseShape(el){
+  pushUndo();
   const shapeData=shapes.find(s=>s.el===el);
   if(shapeData)selectShape(shapeData);
   updateStatus();
+  scheduleSave();
 }
 
 // ── SHAPE PROPS ──────────────────────────────────────
@@ -1063,17 +1199,65 @@ function sendBackward(){
 }
 
 // Keyboard shortcuts
+// Undo/redo stack
+let undoStack=[], redoStack=[];
+function pushUndo(){
+  const snap=JSON.stringify(shapes.map(s=>{
+    const attrs={};for(const a of s.el.attributes)attrs[a.name]=a.value;
+    return{id:s.id,type:s.type,tag:s.el.tagName,attrs,props:{...s.props}};
+  }));
+  undoStack.push(snap);
+  if(undoStack.length>30)undoStack.shift();
+  redoStack=[];
+}
+function applySnapshot(snap){
+  // Clear existing shapes
+  shapes.forEach(s=>s.g.remove());
+  shapes=[];
+  const ns='http://www.w3.org/2000/svg';
+  JSON.parse(snap).forEach(sd=>{
+    const g=document.createElementNS(ns,'g');
+    g.setAttribute('class','shape-wrap');g.setAttribute('data-id',sd.id);
+    const el=document.createElementNS(ns,sd.tag);
+    Object.entries(sd.attrs).forEach(([k,v])=>el.setAttribute(k,v));
+    g.appendChild(el);
+    document.getElementById('shapes-group').appendChild(g);
+    const shapeData={id:sd.id,el,g,type:sd.type,props:{...sd.props}};
+    shapes.push(shapeData);
+    g.addEventListener('mousedown',ev=>{if(currentTool!=='select')return;ev.stopPropagation();selectShape(shapeData);});
+  });
+  deselectShape();updateStatus();
+}
+function undo(){
+  if(undoStack.length===0)return;
+  const snap=undoStack.pop();
+  const current=JSON.stringify(shapes.map(s=>{const a={};for(const at of s.el.attributes)a[at.name]=at.value;return{id:s.id,type:s.type,tag:s.el.tagName,attrs:a,props:{...s.props}};}));
+  redoStack.push(current);
+  applySnapshot(snap);
+  scheduleSave();
+}
+function redo(){
+  if(redoStack.length===0)return;
+  const snap=redoStack.pop();
+  const current=JSON.stringify(shapes.map(s=>{const a={};for(const at of s.el.attributes)a[at.name]=at.value;return{id:s.id,type:s.type,tag:s.el.tagName,attrs:a,props:{...s.props}};}));
+  undoStack.push(current);
+  applySnapshot(snap);
+  scheduleSave();
+}
+
 document.addEventListener('keydown',e=>{
   if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;
-  if(e.key==='Delete'||e.key==='Backspace'){deleteShape();deleteSelected();}
+  if(e.key==='Delete'||e.key==='Backspace'){pushUndo();deleteShape();deleteSelected();}
   if(e.key==='Escape'){deselectShape();deselect();setTool('select');}
-  if(e.key==='d'&&(e.metaKey||e.ctrlKey)){e.preventDefault();duplicateShape();}
+  if(e.key==='d'&&(e.metaKey||e.ctrlKey)){e.preventDefault();pushUndo();duplicateShape();}
+  if(e.key==='z'&&(e.metaKey||e.ctrlKey)&&!e.shiftKey){e.preventDefault();undo();}
+  if((e.key==='z'&&(e.metaKey||e.ctrlKey)&&e.shiftKey)||(e.key==='y'&&e.ctrlKey)){e.preventDefault();redo();}
   // Tool shortcuts
-  if(e.key==='v')setTool('select');
-  if(e.key==='r')setTool('rect');
-  if(e.key==='o')setTool('ellipse');
-  if(e.key==='l')setTool('line');
-  if(e.key==='a')setTool('arrow');
+  if(e.key==='v'&&!e.metaKey&&!e.ctrlKey)setTool('select');
+  if(e.key==='r'&&!e.metaKey&&!e.ctrlKey)setTool('rect');
+  if(e.key==='o'&&!e.metaKey&&!e.ctrlKey)setTool('ellipse');
+  if(e.key==='l'&&!e.metaKey&&!e.ctrlKey)setTool('line');
+  if(e.key==='a'&&!e.metaKey&&!e.ctrlKey)setTool('arrow');
 });
 
 // ═══════════════════════════════════════════════════════
@@ -1213,6 +1397,9 @@ async function startTileExport(){
   // Remove selection indicator before export
   const selInd=document.getElementById('sel-indicator');
   if(selInd)selInd.style.display='none';
+  // Make hl-group visible for export (it's always in the SVG, just ensure it's shown)
+  const hlGroup=document.getElementById('hl-group');
+  if(hlGroup)hlGroup.style.display='';
 
   // Serialize SVG and render at correct offset/scale
   const svgClone=svgNode.cloneNode(true);
@@ -1305,6 +1492,9 @@ function applyFineZoom(val){
   overlayEl.style.transformOrigin="center center";
   svgEl.style.transform=fineZoom===1?"":"scale("+fineZoom+")";
   overlayEl.style.transform=fineZoom===1?"":"scale("+fineZoom+")";
+  // Redraw OSM highlights since coordinate projection changes with scale
+  clearTimeout(window._hlRedrawTimer);
+  window._hlRedrawTimer=setTimeout(redrawAllHighlights,100);
 }
 function resetFineZoom(){
   document.getElementById("fine-zoom").value=1;
@@ -1313,6 +1503,459 @@ function resetFineZoom(){
 function setProg(p){document.getElementById('prog-f').style.width=p+'%';}
 function setSt(m){document.getElementById('m-status').textContent=m;document.getElementById('prog-label').textContent=m;}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+// ═══════════════════════════════════════════════════════
+// OSM FEATURE PANEL
+// ═══════════════════════════════════════════════════════
+const OSM_GROUPS = {
+  road:      { icon:'🛣', label:'Roads', color:'#C9A96E' },
+  waterway:  { icon:'💧', label:'Waterways', color:'#5b9bd5' },
+  railway:   { icon:'🚉', label:'Railway', color:'#e07b39' },
+  amenity:   { icon:'📍', label:'Amenities', color:'#9b6fb5' },
+  place:     { icon:'🏘', label:'Places', color:'#6aaa7a' },
+  leisure:   { icon:'🌿', label:'Leisure', color:'#5fa85a' },
+  landuse:   { icon:'🗺', label:'Land Use', color:'#a08060' },
+  building:  { icon:'🏢', label:'Notable Buildings', color:'#888' },
+  other:     { icon:'📌', label:'Other', color:'#aaa' }
+};
+
+let osmFeatures = [];        // raw OSM elements
+let highlights = {};         // featureId -> { polylines, props }
+let selectedFeatureId = null;
+let fpCollapsed = false;
+let hlSvgGroup = null;
+
+function toggleFeaturePanel(){
+  fpCollapsed = !fpCollapsed;
+  document.getElementById('feature-panel').classList.toggle('collapsed', fpCollapsed);
+  document.getElementById('stage').classList.toggle('fp-collapsed', fpCollapsed);
+  document.getElementById('fp-toggle').innerHTML = fpCollapsed ? '&#9654;' : '&#9664;';
+  const leftPx = fpCollapsed ? '48px' : '260px';
+  document.getElementById('hl-editor').style.left = leftPx;
+  document.getElementById('shape-props').style.left = leftPx;
+  setTimeout(()=>{ if(map) google.maps.event.trigger(map,'resize'); initCrop(); }, 320);
+}
+
+function getCropBounds(){
+  if(!map) return null;
+  const stage = document.getElementById('stage');
+  const sw = stage.offsetWidth, sh = stage.offsetHeight;
+  // Convert crop frame corners from screen px to lat/lng
+  const proj = map.getProjection();
+  if(!proj) return null;
+  const bounds = map.getBounds();
+  if(!bounds) return null;
+  const ne = bounds.getNorthEast(), sw2 = bounds.getSouthWest();
+  const latPerPx = (ne.lat() - sw2.lat()) / sh;
+  const lngPerPx = (ne.lng() - sw2.lng()) / sw;
+  // Crop frame in stage coords
+  const minLat = ne.lat() - (cropY + cropH) * latPerPx;
+  const maxLat = ne.lat() - cropY * latPerPx;
+  const minLng = sw2.lng() + cropX * lngPerPx;
+  const maxLng = sw2.lng() + (cropX + cropW) * lngPerPx;
+  return { minLat, maxLat, minLng, maxLng };
+}
+
+async function scanFeatures(){
+  if(!map) return;
+  const btn = document.getElementById('fp-scan-btn');
+  const status = document.getElementById('fp-status');
+  btn.disabled = true;
+  btn.textContent = 'Scanning…';
+  status.textContent = 'Querying OpenStreetMap…';
+  status.className = 'loading';
+
+  const bounds = getCropBounds();
+  if(!bounds){ status.textContent = 'Map not ready — try again.'; btn.disabled=false; btn.textContent='⌖ Scan Frame'; return; }
+
+  const { minLat, maxLat, minLng, maxLng } = bounds;
+  const bbox = `${minLat},${minLng},${maxLat},${maxLng}`;
+
+  // Overpass query — fetch all named features in bbox
+  const query = `
+[out:json][timeout:25];
+(
+  way["name"]["highway"](${bbox});
+  way["name"]["waterway"](${bbox});
+  way["name"]["railway"](${bbox});
+  node["name"]["amenity"](${bbox});
+  node["name"]["railway"="station"](${bbox});
+  node["name"]["railway"="halt"](${bbox});
+  way["name"]["landuse"](${bbox});
+  way["name"]["leisure"](${bbox});
+  node["name"]["place"](${bbox});
+  way["name"]["building"](${bbox});
+);
+out body geom;
+`;
+
+  // Rate limit: min 3s between scans
+  const now=Date.now();
+  if(window._lastScan && now-window._lastScan < 3000){
+    status.textContent='Please wait a moment before scanning again.';
+    btn.disabled=false;btn.textContent='⌖ Scan Frame';return;
+  }
+  window._lastScan=now;
+  const OVERPASS_MIRRORS=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter','https://maps.mail.ru/osm/tools/overpass/api/interpreter'];
+  let res=null;
+  for(const mirror of OVERPASS_MIRRORS){
+    try{
+      res=await fetch(mirror,{
+      method:'POST',
+      body: 'data=' + encodeURIComponent(query),
+      headers:{'Content-Type':'application/x-www-form-urlencoded'}
+    });
+    if(!res.ok) throw new Error('Overpass error: ' + res.status);
+    const data = await res.json();
+    osmFeatures = data.elements || [];
+    status.textContent = `Found ${osmFeatures.length} features`;
+    status.className = '';
+    renderFeatureList();
+  } catch(e){
+    status.textContent = 'Error: ' + e.message;
+    status.className = '';
+    console.error(e);
+  }
+
+  btn.disabled = false;
+  btn.textContent = '⌖ Scan Frame';
+}
+
+function categoriseFeature(f){
+  const t = f.tags || {};
+  if(t.highway) return 'road';
+  if(t.waterway) return 'waterway';
+  if(t.railway) return 'railway';
+  if(t.amenity) return 'amenity';
+  if(t.place) return 'place';
+  if(t.leisure) return 'leisure';
+  if(t.landuse) return 'landuse';
+  if(t.building) return 'building';
+  return 'other';
+}
+
+function getFeatureSubtype(f){
+  const t = f.tags || {};
+  return t.highway || t.waterway || t.railway || t.amenity || t.place || t.leisure || t.landuse || t.building || '';
+}
+
+function renderFeatureList(){
+  const list = document.getElementById('fp-list');
+  list.innerHTML = '';
+
+  // Group features
+  const groups = {};
+  osmFeatures.forEach(f => {
+    const name = (f.tags||{}).name;
+    if(!name) return;
+    const cat = categoriseFeature(f);
+    if(!groups[cat]) groups[cat] = [];
+    // Deduplicate by name
+    if(!groups[cat].find(x => x.name === name)){
+      groups[cat].push({ id: f.id, name, subtype: getFeatureSubtype(f), feature: f });
+    }
+  });
+
+  // Render each group
+  Object.entries(OSM_GROUPS).forEach(([cat, meta]) => {
+    const items = groups[cat];
+    if(!items || items.length === 0) return;
+
+    const grpEl = document.createElement('div');
+    grpEl.className = 'fp-group open';
+    grpEl.innerHTML = `
+      <div class="fp-group-header" onclick="this.parentElement.classList.toggle('open')">
+        <span class="fp-group-icon">${meta.icon}</span>
+        <span class="fp-group-name">${meta.label}</span>
+        <span class="fp-group-count">${items.length}</span>
+        <span class="fp-group-arrow">›</span>
+      </div>
+      <div class="fp-items" id="grp-${cat}"></div>
+    `;
+    list.appendChild(grpEl);
+
+    const itemsEl = grpEl.querySelector('.fp-items');
+    items.sort((a,b) => a.name.localeCompare(b.name)).forEach(item => {
+      const isHl = !!highlights[item.id];
+      const hlColor = isHl ? highlights[item.id].props.color : meta.color;
+      const div = document.createElement('div');
+      div.className = 'fp-item' + (isHl ? ' highlighted' : '');
+      div.setAttribute('data-id', item.id);
+      div.innerHTML = `
+        <div class="fp-item-dot" style="background:${isHl ? hlColor : 'transparent'};border-color:${hlColor}"></div>
+        <span class="fp-item-name" title="${item.name}">${item.name}</span>
+        <span class="fp-item-type">${item.subtype}</span>
+      `;
+      div.onclick = () => onFeatureClick(item);
+      itemsEl.appendChild(div);
+    });
+  });
+
+  if(list.innerHTML === '') list.innerHTML = '<div style="padding:16px;font-size:9px;color:var(--accent);text-align:center">No named features found.<br>Try zooming in or panning to a busier area.</div>';
+}
+
+function onFeatureClick(item){
+  selectedFeatureId = item.id;
+  // If already highlighted, just open editor
+  if(!highlights[item.id]){
+    // Create new highlight with defaults based on category
+    const cat = categoriseFeature(item.feature);
+    const meta = OSM_GROUPS[cat] || OSM_GROUPS.other;
+    const isLine = ['road','waterway','railway'].includes(cat);
+    const props = {
+      color: meta.color, width: isLine?4:2,
+      opacity: 75, style: 'solid', cap: 'round',
+      glow: 0, label: false, labelColor: '#3D2B1F'
+    };
+    highlights[item.id] = { props, svgEls: [], labelEl: null, feature: item.feature };
+    drawHighlight(item.id);
+  }
+  openHlEditor(item);
+  // Update list item appearance
+  document.querySelectorAll('.fp-item').forEach(el => el.classList.remove('active'));
+  const el = document.querySelector(`.fp-item[data-id="${item.id}"]`);
+  if(el) el.classList.add('highlighted');
+  scheduleSave();
+}
+
+function drawHighlight(featureId){
+  const hl = highlights[featureId];
+  if(!hl) return;
+  const f = hl.feature;
+  const p = hl.props;
+
+  // Remove existing SVG elements
+  hl.svgEls.forEach(el => el.remove());
+  hl.svgEls = [];
+  if(hl.labelEl){ hl.labelEl.remove(); hl.labelEl = null; }
+
+  const stage = document.getElementById('stage');
+  const sw = stage.offsetWidth, sh = stage.offsetHeight;
+
+  // Ensure highlight group exists in SVG layer
+  let hlGroup = document.getElementById('hl-group');
+  if(!hlGroup){
+    hlGroup = document.createElementNS('http://www.w3.org/2000/svg','g');
+    hlGroup.setAttribute('id','hl-group');
+    document.getElementById('svg-layer').insertBefore(hlGroup, document.getElementById('shapes-group'));
+  }
+
+  const bounds = map.getBounds();
+  if(!bounds) return;
+  const ne = bounds.getNorthEast(), sw2 = bounds.getSouthWest();
+  const latPerPx = (ne.lat() - sw2.lat()) / sh;
+  const lngPerPx = (ne.lng() - sw2.lng()) / sw;
+
+  function latLngToStage(lat, lng){
+    const x = (lng - sw2.lng()) / lngPerPx;
+    const y = (ne.lat() - lat) / latPerPx;
+    return { x, y };
+  }
+
+  const ns = 'http://www.w3.org/2000/svg';
+  const strokeDash = p.style==='dashed'?`${p.width*4},${p.width*2}`:p.style==='dotted'?`${p.width},${p.width*2}`:'none';
+  const filter = p.glow > 0 ? `drop-shadow(0 0 ${p.glow}px ${p.color})` : 'none';
+
+  // For ways (lines/areas) — draw polyline
+  if(f.geometry && f.geometry.length > 0){
+    const geom = f.geometry;
+
+    // Check if it's a closed area (first = last point) or a line
+    const isClosed = geom.length > 2 &&
+      geom[0].lat === geom[geom.length-1].lat &&
+      geom[0].lon === geom[geom.length-1].lon;
+
+    const points = geom.map(g => {
+      const pt = latLngToStage(g.lat, g.lon);
+      return `${pt.x},${pt.y}`;
+    }).join(' ');
+
+    const el = document.createElementNS(ns, isClosed ? 'polygon' : 'polyline');
+    el.setAttribute('points', points);
+    el.setAttribute('fill', isClosed ? p.color : 'none');
+    el.setAttribute('fill-opacity', isClosed ? p.opacity/100*0.3 : 0);
+    el.setAttribute('stroke', p.color);
+    el.setAttribute('stroke-width', p.width);
+    el.setAttribute('stroke-opacity', p.opacity/100);
+    el.setAttribute('stroke-dasharray', strokeDash);
+    el.setAttribute('stroke-linecap', p.cap);
+    el.setAttribute('stroke-linejoin', 'round');
+    el.style.filter = filter;
+    el.style.pointerEvents = 'none';
+
+    // Double line effect
+    if(p.style === 'double'){
+      const el2 = el.cloneNode();
+      el2.setAttribute('stroke-width', p.width + 4);
+      el2.setAttribute('stroke-opacity', p.opacity/100*0.3);
+      el2.setAttribute('stroke-dasharray', 'none');
+      hlGroup.appendChild(el2);
+      hl.svgEls.push(el2);
+    }
+
+    hlGroup.appendChild(el);
+    hl.svgEls.push(el);
+
+    // Label at midpoint
+    if(p.label && (f.tags||{}).name){
+      const midIdx = Math.floor(geom.length/2);
+      const midPt = latLngToStage(geom[midIdx].lat, geom[midIdx].lon);
+      const txt = document.createElementNS(ns, 'text');
+      txt.setAttribute('x', midPt.x);
+      txt.setAttribute('y', midPt.y - 6);
+      txt.setAttribute('text-anchor', 'middle');
+      txt.setAttribute('fill', p.labelColor);
+      txt.setAttribute('font-size', '10');
+      txt.setAttribute('font-family', 'Archivo, sans-serif');
+      txt.setAttribute('font-weight', '500');
+      txt.setAttribute('letter-spacing', '0.04em');
+      txt.setAttribute('paint-order', 'stroke');
+      txt.setAttribute('stroke', '#fff');
+      txt.setAttribute('stroke-width', '3');
+      txt.setAttribute('stroke-linejoin', 'round');
+      txt.textContent = f.tags.name;
+      txt.style.pointerEvents = 'none';
+      hlGroup.appendChild(txt);
+      hl.labelEl = txt;
+    }
+  } else if(f.lat !== undefined && f.lon !== undefined){
+    // Node (point feature — station, amenity etc)
+    const pt = latLngToStage(f.lat, f.lon);
+    const circle = document.createElementNS(ns, 'circle');
+    circle.setAttribute('cx', pt.x);
+    circle.setAttribute('cy', pt.y);
+    circle.setAttribute('r', p.width * 3);
+    circle.setAttribute('fill', p.color);
+    circle.setAttribute('fill-opacity', p.opacity/100);
+    circle.style.filter = filter;
+    circle.style.pointerEvents = 'none';
+    hlGroup.appendChild(circle);
+    hl.svgEls.push(circle);
+
+    if(p.label && (f.tags||{}).name){
+      const txt = document.createElementNS(ns,'text');
+      txt.setAttribute('x', pt.x);
+      txt.setAttribute('y', pt.y - p.width*3 - 4);
+      txt.setAttribute('text-anchor','middle');
+      txt.setAttribute('fill', p.labelColor);
+      txt.setAttribute('font-size','10');
+      txt.setAttribute('font-family','Archivo, sans-serif');
+      txt.setAttribute('font-weight','500');
+      txt.setAttribute('paint-order','stroke');
+      txt.setAttribute('stroke','#fff');
+      txt.setAttribute('stroke-width','3');
+      txt.textContent = f.tags.name;
+      txt.style.pointerEvents='none';
+      hlGroup.appendChild(txt);
+      hl.labelEl = txt;
+    }
+  }
+
+  // Update list item dot
+  const dotEl = document.querySelector(`.fp-item[data-id="${featureId}"] .fp-item-dot`);
+  if(dotEl){ dotEl.style.background = p.color; dotEl.style.borderColor = p.color; }
+}
+
+// Redraw all highlights (called on map pan/zoom)
+function redrawAllHighlights(){
+  // Remove existing hl-group
+  const old = document.getElementById('hl-group');
+  if(old){ old.innerHTML = ''; }
+  Object.keys(highlights).forEach(id => {
+    highlights[id].svgEls = [];
+    highlights[id].labelEl = null;
+    drawHighlight(parseInt(id));
+  });
+}
+
+function openHlEditor(item){
+  const hl = highlights[item.id];
+  if(!hl) return;
+  const p = hl.props;
+  document.getElementById('hl-name').textContent = item.name;
+  document.getElementById('hl-color').value = p.color;
+  document.getElementById('hl-hex').textContent = p.color;
+  document.getElementById('hl-width').value = p.width;
+  document.getElementById('hl-width-v').textContent = p.width+'px';
+  document.getElementById('hl-opacity').value = p.opacity;
+  document.getElementById('hl-opacity-v').textContent = p.opacity+'%';
+  document.getElementById('hl-style').value = p.style;
+  document.getElementById('hl-cap').value = p.cap;
+  document.getElementById('hl-glow').value = p.glow;
+  document.getElementById('hl-glow-v').textContent = p.glow+'px';
+  document.getElementById('hl-label').checked = p.label;
+  document.getElementById('hl-label-color').value = p.labelColor;
+  document.getElementById('hl-label-hex').textContent = p.labelColor;
+  document.getElementById('hl-editor').classList.add('open');
+}
+
+function closeHlEditor(){
+  document.getElementById('hl-editor').classList.remove('open');
+  selectedFeatureId = null;
+}
+
+function updateHighlight(){
+  if(!selectedFeatureId) return;
+  const hl = highlights[selectedFeatureId];
+  if(!hl) return;
+  const p = hl.props;
+  p.color = document.getElementById('hl-color').value;
+  document.getElementById('hl-hex').textContent = p.color;
+  p.width = parseInt(document.getElementById('hl-width').value);
+  document.getElementById('hl-width-v').textContent = p.width+'px';
+  p.opacity = parseInt(document.getElementById('hl-opacity').value);
+  document.getElementById('hl-opacity-v').textContent = p.opacity+'%';
+  p.style = document.getElementById('hl-style').value;
+  p.cap = document.getElementById('hl-cap').value;
+  p.glow = parseInt(document.getElementById('hl-glow').value);
+  document.getElementById('hl-glow-v').textContent = p.glow+'px';
+  p.label = document.getElementById('hl-label').checked;
+  p.labelColor = document.getElementById('hl-label-color').value;
+  document.getElementById('hl-label-hex').textContent = p.labelColor;
+  drawHighlight(selectedFeatureId);
+  scheduleSave();
+}
+
+function removeHighlight(){
+  if(!selectedFeatureId) return;
+  const hl = highlights[selectedFeatureId];
+  if(hl){
+    hl.svgEls.forEach(el=>el.remove());
+    if(hl.labelEl) hl.labelEl.remove();
+    delete highlights[selectedFeatureId];
+  }
+  const dotEl = document.querySelector(`.fp-item[data-id="${selectedFeatureId}"] .fp-item-dot`);
+  if(dotEl){ dotEl.style.background='transparent'; }
+  const itemEl = document.querySelector(`.fp-item[data-id="${selectedFeatureId}"]`);
+  if(itemEl) itemEl.classList.remove('highlighted');
+  closeHlEditor();
+  scheduleSave();
+}
+
+function clearHighlights(){
+  Object.keys(highlights).forEach(id=>{
+    const hl = highlights[id];
+    hl.svgEls.forEach(el=>el.remove());
+    if(hl.labelEl) hl.labelEl.remove();
+  });
+  highlights = {};
+  document.querySelectorAll('.fp-item').forEach(el=>{
+    el.classList.remove('highlighted');
+    const dot = el.querySelector('.fp-item-dot');
+    if(dot){ dot.style.background='transparent'; }
+  });
+  closeHlEditor();
+  scheduleSave();
+}
+
+// Redraw highlights on map move
+function hookHighlightRedraw(){
+  if(!map) return;
+  map.addListener('bounds_changed', ()=>{
+    clearTimeout(window._hlRedrawTimer);
+    window._hlRedrawTimer = setTimeout(redrawAllHighlights, 80);
+  });
+}
 
 // ═══════════════════════════════════════════════════════
 // PASSWORD GATE — SHA-256 hashed, never stored in plain text
@@ -1333,9 +1976,10 @@ async function checkPassword(){
   const hash=await sha256(val);
   if(hash===PW_HASH){
     // Store session token (hashed timestamp — not the password)
-    const token=await sha256('dem-oak-session-'+new Date().toDateString());
+    const token=await sha256('dem-oak-session-'+Math.floor(Date.now()/86400000));
     sessionStorage.setItem('dem-oak-auth',token);
     document.getElementById('pw-gate').style.display='none';
+    await openDB();
     restoreState();
   } else {
     document.getElementById('pw-error').textContent='Incorrect password.';
@@ -1348,9 +1992,10 @@ async function checkPassword(){
 async function checkAuth(){
   const stored=sessionStorage.getItem('dem-oak-auth');
   if(!stored){return;}
-  const expected=await sha256('dem-oak-session-'+new Date().toDateString());
+  const expected=await sha256('dem-oak-session-'+Math.floor(Date.now()/86400000));
   if(stored===expected){
     document.getElementById('pw-gate').style.display='none';
+    await openDB();
     restoreState();
   }
 }
@@ -1358,7 +2003,64 @@ async function checkAuth(){
 // ═══════════════════════════════════════════════════════
 // AUTO-SAVE SYSTEM
 // ═══════════════════════════════════════════════════════
-const SAVE_KEY='dem-oak-studio-state';
+// ═══════════════════════════════════════════════════════
+// INDEXED DB STORAGE ENGINE
+// Handles unlimited size — PNGs, shapes, highlights, OSM features
+// ═══════════════════════════════════════════════════════
+const DB_NAME='dem-oak-studio';
+const DB_VERSION=1;
+let db=null;
+
+function openDB(){
+  return new Promise((res,rej)=>{
+    const req=indexedDB.open(DB_NAME,DB_VERSION);
+    req.onupgradeneeded=e=>{
+      const d=e.target.result;
+      if(!d.objectStoreNames.contains('state')) d.createObjectStore('state');
+      if(!d.objectStoreNames.contains('markers')) d.createObjectStore('markers',{keyPath:'id'});
+    };
+    req.onsuccess=e=>{db=e.target.result;res(db);};
+    req.onerror=e=>rej(e.target.error);
+  });
+}
+
+function dbPut(store,key,value){
+  return new Promise((res,rej)=>{
+    const tx=db.transaction(store,'readwrite');
+    const req=store==='markers'?tx.objectStore(store).put(value):tx.objectStore(store).put(value,key);
+    req.onsuccess=()=>res();
+    req.onerror=e=>rej(e.target.error);
+  });
+}
+
+function dbGet(store,key){
+  return new Promise((res,rej)=>{
+    const tx=db.transaction(store,'readonly');
+    const req=tx.objectStore(store).get(key);
+    req.onsuccess=e=>res(e.target.result);
+    req.onerror=e=>rej(e.target.error);
+  });
+}
+
+function dbGetAll(store){
+  return new Promise((res,rej)=>{
+    const tx=db.transaction(store,'readonly');
+    const req=tx.objectStore(store).getAll();
+    req.onsuccess=e=>res(e.target.result);
+    req.onerror=e=>rej(e.target.error);
+  });
+}
+
+function dbClear(store){
+  return new Promise((res,rej)=>{
+    const tx=db.transaction(store,'readwrite');
+    const req=tx.objectStore(store).clear();
+    req.onsuccess=()=>res();
+    req.onerror=e=>rej(e.target.error);
+  });
+}
+
+// ── AUTO SAVE ──────────────────────────────────────────
 let saveTimer=null;
 
 function scheduleSave(){
@@ -1368,60 +2070,79 @@ function scheduleSave(){
   saveTimer=setTimeout(()=>saveState(),1200);
 }
 
-function saveState(){
-  if(!map)return;
+async function saveState(){
+  if(!map||!db)return;
   const center=map.getCenter();
-  // Serialize shapes (store SVG path/attributes + props)
+
+  // Serialize shapes
   const shapeData=shapes.map(s=>{
-    const el=s.el;
-    const tag=el.tagName;
     const attrs={};
-    for(const a of el.attributes)attrs[a.name]=a.value;
-    return{id:s.id,type:s.type,tag,attrs,props:s.props};
+    for(const a of s.el.attributes)attrs[a.name]=a.value;
+    return{id:s.id,type:s.type,tag:s.el.tagName,attrs,props:s.props};
   });
-  // Serialize markers (store as base64 src + position)
-  const markerData=markers.map(m=>({src:m.src,x:m.x,y:m.y,w:m.w,h:m.h}));
+
+  // Serialize highlights (save geometry + props, NOT the SVG elements)
+  const hlData={};
+  Object.entries(highlights).forEach(([id,hl])=>{
+    hlData[id]={props:hl.props,feature:hl.feature};
+  });
+
+  // Serialize OSM features (raw data)
+  const osmData=osmFeatures;
+
+  // Main state (NO marker src — stored separately in IndexedDB markers store)
+  const markerMeta=markers.map((m,i)=>({id:'mk'+i,x:m.x,y:m.y,w:m.w,h:m.h}));
 
   const state={
-    v:2, // version
+    v:3,
     ts:Date.now(),
     map:{lat:center.lat(),lng:center.lng(),zoom:map.getZoom()},
     fineZoom:parseFloat(document.getElementById('fine-zoom').value),
     aspect:document.getElementById('aspect').value,
     SC:{...SC},SA:{...SA},SV:{...SV},
     shapes:shapeData,
-    markers:markerData
+    markerMeta,
+    highlights:hlData,
+    osmFeatures:osmData
   };
+
   try{
-    localStorage.setItem(SAVE_KEY,JSON.stringify(state));
+    // Save main state to IndexedDB state store
+    await dbPut('state','main',state);
+
+    // Save each marker image separately (keyed by index) — no size limit
+    await dbClear('markers');
+    for(let i=0;i<markers.length;i++){
+      await dbPut('markers',null,{id:'mk'+i,src:markers[i].src,x:markers[i].x,y:markers[i].y,w:markers[i].w,h:markers[i].h});
+    }
+
     const ind=document.getElementById('save-indicator');
     const d=new Date();
     ind.textContent='Saved '+d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
     ind.className='saved';
   }catch(e){
-    console.warn('AutoSave failed (storage full?)');
+    console.error('AutoSave failed:',e);
     document.getElementById('save-indicator').textContent='Save failed';
   }
 }
 
-function restoreState(){
-  const raw=localStorage.getItem(SAVE_KEY);
-  if(!raw)return;
+async function restoreState(){
+  if(!db) return;
   let state;
-  try{state=JSON.parse(raw);}catch(e){return;}
-  if(!state||state.v!==2)return;
+  try{ state=await dbGet('state','main'); }catch(e){return;}
+  if(!state||state.v!==3) return;
 
-  // Restore map position (wait for map to be ready)
-  const tryRestore=()=>{
-    if(!map){setTimeout(tryRestore,200);return;}
+  const tryRestore=async()=>{
+    if(!map){setTimeout(()=>tryRestore(),200);return;}
+
+    // Map position
     map.setCenter({lat:state.map.lat,lng:state.map.lng});
     map.setZoom(state.map.zoom);
 
-    // Restore style
+    // Style
     if(state.SC)Object.assign(SC,state.SC);
     if(state.SA)Object.assign(SA,state.SA);
     if(state.SV)Object.assign(SV,state.SV);
-    // Sync style panel UI
     Object.entries(SC).forEach(([k,v])=>{
       const ci=document.getElementById('c-'+k),hi=document.getElementById('h-'+k);
       if(ci)ci.value=v;if(hi)hi.textContent=v;
@@ -1435,22 +2156,24 @@ function restoreState(){
     });
     applyStyle();
 
-    // Restore aspect
+    // Aspect
     if(state.aspect){
       document.getElementById('aspect').value=state.aspect;
       onAspectChange();
     }
 
-    // Restore fine zoom
+    // Fine zoom
     if(state.fineZoom&&state.fineZoom!==1){
       document.getElementById('fine-zoom').value=state.fineZoom;
       applyFineZoom(state.fineZoom);
     }
 
-    // Restore markers
-    if(state.markers){
-      state.markers.forEach(m=>spawnMarkerDirect(m.src,m.x,m.y,m.w,m.h));
-    }
+    // Restore markers from IndexedDB markers store (full src with no size limit)
+    try{
+      const markerRows=await dbGetAll('markers');
+      markerRows.sort((a,b)=>a.id.localeCompare(b.id));
+      markerRows.forEach(m=>spawnMarkerDirect(m.src,m.x,m.y,m.w,m.h));
+    }catch(e){console.warn('Marker restore failed:',e);}
 
     // Restore shapes
     if(state.shapes){
@@ -1472,16 +2195,45 @@ function restoreState(){
       });
     }
 
+    // Restore OSM features
+    if(state.osmFeatures&&state.osmFeatures.length>0){
+      osmFeatures=state.osmFeatures;
+      renderFeatureList();
+      document.getElementById('fp-status').textContent=`Restored ${osmFeatures.length} features`;
+    }
+
+    // Restore highlights (redraw after map is fully idle)
+    if(state.highlights){
+      google.maps.event.addListenerOnce(map,'idle',()=>{
+        Object.entries(state.highlights).forEach(([id,hlData])=>{
+          highlights[parseInt(id)]={
+            props:hlData.props,
+            feature:hlData.feature,
+            svgEls:[],
+            labelEl:null
+          };
+          drawHighlight(parseInt(id));
+        });
+        // Update list dots
+        Object.entries(highlights).forEach(([id,hl])=>{
+          const dot=document.querySelector(`.fp-item[data-id="${id}"] .fp-item-dot`);
+          if(dot){dot.style.background=hl.props.color;dot.style.borderColor=hl.props.color;}
+          const item=document.querySelector(`.fp-item[data-id="${id}"]`);
+          if(item)item.classList.add('highlighted');
+        });
+      });
+    }
+
     updateStatus();
     const ind=document.getElementById('save-indicator');
     const d=new Date(state.ts);
     ind.textContent='Restored '+d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
     ind.className='saved';
   };
-  tryRestore();
+  await tryRestore();
 }
 
-// Spawn marker without spawning to center (used by restore)
+// Spawn marker at exact position (used by restore)
 function spawnMarkerDirect(src,x,y,w,h){
   const layer=document.getElementById('overlay-layer');
   const el=document.createElement('div');el.className='map-marker';
@@ -1517,9 +2269,15 @@ function hookAutosave(){
 }
 
 // Clear saved state (useful for fresh start)
-function clearSavedState(){
-  if(confirm('Clear all saved state and start fresh?')){
-    localStorage.removeItem(SAVE_KEY);
+async function clearSavedState(){
+  if(confirm('Clear all saved state and start fresh? This will remove all shapes, markers, highlights and settings.')){
+    try{
+      if(db){
+        await dbClear('state');
+        await dbClear('markers');
+      }
+    }catch(e){}
+    sessionStorage.removeItem('dem-oak-auth');
     location.reload();
   }
 }
@@ -1532,7 +2290,7 @@ const _origInitMap=initMap;
 initMap=function(){
   _origInitMap();
   google.maps.event.addListenerOnce(map,'idle',()=>{
-    setTimeout(hookAutosave,500);
+    setTimeout(hookAutosave,500);hookHighlightRedraw();
   });
 };
 </script>
