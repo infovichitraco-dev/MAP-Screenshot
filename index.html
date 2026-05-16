@@ -233,12 +233,14 @@ input[type="range"]{accent-color:var(--gold);cursor:pointer;}
 .btn-p{background:var(--bark);color:var(--offwhite);border:none;padding:9px 24px;font-family:'Archivo',sans-serif;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;}
 .btn-p:hover{background:#5a3d2b;}
 .btn-s{background:transparent;border:1px solid var(--bark);color:var(--bark);padding:9px 24px;font-family:'Archivo',sans-serif;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;}
-/* Hide all UI until auth — shown by JS after unlock */
-#header,#stage,#draw-toolbar,#feature-panel,#statusbar,#shape-props,#hl-editor,#save-indicator{display:none!important;}
-#header.ui-ready,#stage.ui-ready,#draw-toolbar.ui-ready,#feature-panel.ui-ready,#statusbar.ui-ready,#save-indicator.ui-ready{display:flex!important;}
-#stage.ui-ready{display:block!important;}
+/* Hide only UI chrome until auth — stage/map stay visible under pw-gate */
+/* pw-gate sits on top at z-index:9999 so map renders at full size in background */
+#header,#draw-toolbar,#feature-panel,#statusbar,#shape-props,#hl-editor,#save-indicator{display:none!important;}
+#header.ui-ready{display:flex!important;}
+#draw-toolbar.ui-ready{display:flex!important;}
 #feature-panel.ui-ready{display:flex!important;}
 #statusbar.ui-ready{display:flex!important;}
+#save-indicator.ui-ready{display:block!important;}
 </style>
 <style>
 /* ── PASSWORD GATE ── */
@@ -2003,24 +2005,35 @@ async function sha256(str){
 }
 
 function showUI(){
-  ['header','stage','draw-toolbar','feature-panel','statusbar','save-indicator'].forEach(id=>{
+  // stage and map are always rendered (under pw-gate) so map initializes at full size
+  // we only need to show the UI chrome after auth
+  ['header','draw-toolbar','feature-panel','statusbar','save-indicator'].forEach(id=>{
     const el=document.getElementById(id);
     if(el)el.classList.add('ui-ready');
   });
+  // Trigger map resize now that header/panels are visible (they affect stage dimensions)
+  setTimeout(()=>{
+    if(map){
+      google.maps.event.trigger(map,'resize');
+      map.setCenter(map.getCenter());
+      initCrop();
+    }
+  }, 350);
 }
 
 function unlockAndLoad(){
-  // Hide gate
+  // Hide gate — map was already rendering underneath
   document.getElementById('pw-gate').style.display='none';
   // Store session (24hr)
   sha256('dem-oak-'+Math.floor(Date.now()/86400000)).then(t=>sessionStorage.setItem('dem-oak-auth',t));
-  // Show UI
+  // Show UI chrome (header, toolbar, panels)
   showUI();
-  // Load maps after two paint frames so map div is fully rendered
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    setTimeout(loadMapsScript, 100);
-    window._pendingRestore=true;
-  }));
+  // Trigger state restore
+  window._pendingRestore=true;
+  // If map already ready, restore now; otherwise initMap will catch _pendingRestore flag
+  if(map){
+    setTimeout(()=>{ restoreState(); }, 300);
+  }
 }
 
 async function checkPassword(){
@@ -2353,12 +2366,12 @@ window.gm_authFailure=function(){
   alert('Google Maps API key rejected. Check GCP Console — ensure Maps JavaScript API is enabled and billing is active.');
 };
 
-// On page load: check if already authenticated this session
+// On page load: start map loading immediately (map div is always visible under pw-gate)
+// and check session auth in parallel
 window.addEventListener('load',()=>{
-  // Open IndexedDB in background (don't block auth)
   openDB().catch(e=>console.warn('IndexedDB:',e));
-  // Check session
-  checkAuth();
+  loadMapsScript(); // map renders under the gate at full size
+  checkAuth();      // if session valid, gate hides and UI chrome shows
 });
 
 // initMap is called directly by Google Maps — no wrapping needed.
