@@ -230,6 +230,15 @@ input[type="range"]{accent-color:var(--gold);cursor:pointer;}
 .sps{display:flex;align-items:center;gap:5px;}
 .sps input[type="range"]{width:68px;}
 .sps span{font-size:9px;color:var(--accent);min-width:26px;text-align:right;font-family:monospace;}
+/* Granular style rows */
+.sp-feature-row{display:flex;align-items:center;gap:5px;margin-bottom:7px;flex-wrap:nowrap;}
+.sp-feature-row:last-child{margin-bottom:0;}
+.sp-flbl{font-size:9px;color:rgba(245,238,230,0.65);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sp-fcontrols{display:flex;align-items:center;gap:4px;flex-shrink:0;}
+.sp-fcontrols input[type="color"]{width:22px;height:18px;padding:1px 2px;border:1px solid var(--border);background:transparent;cursor:pointer;border-radius:2px;flex-shrink:0;}
+.sp-opa-wrap{display:flex;align-items:center;gap:3px;}
+.sp-fcontrols input[type="range"]{width:52px;accent-color:var(--gold);}
+.sp-fcontrols span{font-size:8px;color:var(--accent);min-width:26px;font-family:monospace;}
 
 /* ── STATUS ── */
 #statusbar{position:fixed;bottom:0;left:0;right:0;height:28px;background:var(--panel);border-top:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:20px;font-size:9px;letter-spacing:0.08em;color:rgba(226,201,168,0.45);z-index:500;}
@@ -637,42 +646,62 @@ input[type="range"]{accent-color:var(--gold);cursor:pointer;}
   </div>
 </div>
 
+
 <!-- STYLE PANEL -->
 <div id="style-panel">
-  <div class="sp-head">
-    <h3>Style Editor</h3>
-    <p>Edits apply live to the map</p>
-    <div class="sp-acts">
-      <button class="sp-act" onclick="resetStyle()">Reset</button>
-      <button class="sp-act pri" onclick="copyJSON()">Copy JSON</button>
-    </div>
+  <div class="sp-head"><h3>Style Editor</h3><p>Individual control for every map layer</p><div class="sp-acts"><button class="sp-act" onclick="resetStyle()">Reset</button><button class="sp-act pri" onclick="copyJSON()">Copy JSON</button></div></div>
+  <div class="sp-sec"><div class="sp-sec-title">Land &amp; Water</div>
+    <div class="sp-row sp-feature-row"><label class="spt" for="v-land"><input type="checkbox" id="v-land" checked onchange="onS()"><div class="spt-track"></div><div class="spt-thumb"></div></label><span class="sp-flbl">Land / Background</span><div class="sp-fcontrols"><input type="color" id="c-land" value="#f2f2f2" oninput="onS()" title="Color"><input type="range" id="o-land" min="0" max="100" value="100" title="Opacity" oninput="document.getElementById('ov-land').textContent=this.value+'%';onS()"><span id="ov-land">100%</span></div></div>
+    <div class="sp-row sp-feature-row"><label class="spt" for="v-parks"><input type="checkbox" id="v-parks" checked onchange="onS()"><div class="spt-track"></div><div class="spt-thumb"></div></label><span class="sp-flbl">Parks &amp; Green</span><div class="sp-fcontrols"><input type="color" id="c-parks" value="#e5f0e0" oninput="onS()" title="Color"><input type="range" id="o-parks" min="0" max="100" value="100" title="Opacity" oninput="document.getElementById('ov-parks').textContent=this.value+'%';onS()"><span id="ov-parks">100%</span></div></div>
+    <div class="sp-row sp-feature-row"><label class="spt" for="v-industrial"><input type="checkbox" id="v-industrial" checked onchange="onS()"><div class="spt-track"></div><div class="spt-thumb"></div></label><span class="sp-flbl">Industrial</span><div class="sp-fcontrols"><input type="color" id="c-industrial" value="#e8e8e4" oninput="onS()" title="Color"><input type="range" id="o-industrial" min="0" max="100" value="100" title="Opacity" oninput="document.getElementById('ov-industrial').textContent=this.value+'%';onS()"><span id="ov-industrial">100%</span></div></div>
+    <div class="sp-row sp-feature-row"><label class="spt" for="v-commercial"><input type="checkbox" id="v-commercial" checked onchange="onS()"><div class="spt-track"></div><div class="spt-thumb"></div></label><span class="sp-flbl">Commercial</span><div class="sp-fcontrols"><input type="color" id="c-commercial" value="#f0ece4" oninput="onS()" title="Color"><input type="range" id="o-commercial" min="0" max="100" value="100" title="Opacity" oninput="document.getElementById('ov-commercial').textContent=this.value+'%';onS()"><span id="ov-commercial">100%</span></div></div>
+    <div class="sp-row sp-feature-row"><label class="spt" for="v-residential"><input type="checkbox" id="v-residential" checked onchange="onS()"><div class="spt-track"></div><div class="spt-thumb"></div></label><span class="sp-flbl">Residential</span><div class="sp-fcontrols"><input type="color" id="c-residential" value="#f2f2f2" oninput="onS()" title="Color"><input type="range" id="o-residential" min="0" max="100" value="100" title="Opacity" oninput="document.getElementById('ov-residential').textContent=this.value+'%';onS()"><span id="ov-residential">100%</span></div></div>
+    <div class="sp-row sp-feature-row"><label class="spt" for="v-water"><input type="checkbox" id="v-water" checked onchange="onS()"><div class="spt-track"></div><div class="spt-thumb"></div></label><span class="sp-flbl">Water Fill</span><div class="sp-fcontrols"><input type="color" id="c-water" value="#3a2d1c" oninput="onS()" title="Color"><input type="range" id="o-water" min="0" max="100" value="100" title="Opacity" oninput="document.getElementById('ov-water').textContent=this.value+'%';onS()"><span id="ov-water">100%</span></div></div>
+    <div class="sp-row sp-feature-row"><label class="spt" for="v-waterlabel"><input type="checkbox" id="v-waterlabel" checked onchange="onS()"><div class="spt-track"></div><div class="spt-thumb"></div></label><span class="sp-flbl">Water Labels</span><div class="sp-fcontrols"><input type="color" id="c-waterlabel" value="#3a2d1c" oninput="onS()" title="Color"><input type="range" id="o-waterlabel" min="0" max="100" value="70" title="Opacity" oninput="document.getElementById('ov-waterlabel').textContent=this.value+'%';onS()"><span id="ov-waterlabel">70%</span></div></div>
   </div>
-  <div class="sp-sec">
-    <div class="sp-sec-title">Colors</div>
-    <div class="sp-row"><span class="sp-lbl">Land / Background</span><div class="spc"><input type="color" id="c-land" value="#f2f2f2" oninput="onColor('land',this.value)"><span class="spc-hex" id="h-land">#f2f2f2</span></div></div>
-    <div class="sp-row"><span class="sp-lbl">Water</span><div class="spc"><input type="color" id="c-water" value="#3a2d1c" oninput="onColor('water',this.value)"><span class="spc-hex" id="h-water">#3a2d1c</span></div></div>
-    <div class="sp-row"><span class="sp-lbl">Road Fill</span><div class="spc"><input type="color" id="c-road" value="#d4d4d4" oninput="onColor('road',this.value)"><span class="spc-hex" id="h-road">#d4d4d4</span></div></div>
-    <div class="sp-row"><span class="sp-lbl">Road Labels</span><div class="spc"><input type="color" id="c-roadlabel" value="#444444" oninput="onColor('roadlabel',this.value)"><span class="spc-hex" id="h-roadlabel">#444444</span></div></div>
-    <div class="sp-row"><span class="sp-lbl">Admin Labels</span><div class="spc"><input type="color" id="c-admin" value="#444444" oninput="onColor('admin',this.value)"><span class="spc-hex" id="h-admin">#444444</span></div></div>
+  <div class="sp-sec"><div class="sp-sec-title">Highways</div>
+    <div class="sp-row sp-feature-row"><label class="spt" for="v-hwy-fill"><input type="checkbox" id="v-hwy-fill" checked onchange="onS()"><div class="spt-track"></div><div class="spt-thumb"></div></label><span class="sp-flbl">Highway Fill</span><div class="sp-fcontrols"><input type="color" id="c-hwy-fill" value="#e0d0b0" oninput="onS()" title="Color"><input type="range" id="o-hwy-fill" min="0" max="100" value="100" title="Opacity" oninput="document.getElementById('ov-hwy-fill').textContent=this.value+'%';onS()"><span id="ov-hwy-fill">100%</span></div></div>
+    <div class="sp-row sp-feature-row"><label class="spt" for="v-hwy-stroke"><input type="checkbox" id="v-hwy-stroke" checked onchange="onS()"><div class="spt-track"></div><div class="spt-thumb"></div></label><span class="sp-flbl">Highway Casing</span><div class="sp-fcontrols"><input type="color" id="c-hwy-stroke" value="#c8b898" oninput="onS()" title="Color"><input type="range" id="o-hwy-stroke" min="0" max="100" value="100" title="Opacity" oninput="document.getElementById('ov-hwy-stroke').textContent=this.value+'%';onS()"><span id="ov-hwy-stroke">100%</span></div></div>
+    <div class="sp-row sp-feature-row"><label class="spt" for="v-hwy-label"><input type="checkbox" id="v-hwy-label" checked onchange="onS()"><div class="spt-track"></div><div class="spt-thumb"></div></label><span class="sp-flbl">Highway Labels</span><div class="sp-fcontrols"><input type="color" id="c-hwy-label" value="#444444" oninput="onS()" title="Color"><input type="range" id="o-hwy-label" min="0" max="100" value="100" title="Opacity" oninput="document.getElementById('ov-hwy-label').textContent=this.value+'%';onS()"><span id="ov-hwy-label">100%</span></div></div>
+    <div class="sp-row sp-feature-row"><label class="spt" for="v-hwy-icon"><input type="checkbox" id="v-hwy-icon"  onchange="onS()"><div class="spt-track"></div><div class="spt-thumb"></div></label><span class="sp-flbl">Highway Icons</span><div class="sp-fcontrols"><input type="color" id="c-hwy-icon" value="#888888" oninput="onS()" title="Color"><input type="range" id="o-hwy-icon" min="0" max="100" value="100" title="Opacity" oninput="document.getElementById('ov-hwy-icon').textContent=this.value+'%';onS()"><span id="ov-hwy-icon">100%</span></div></div>
   </div>
-  <div class="sp-sec">
-    <div class="sp-sec-title">Visibility</div>
-    <div class="sp-row"><span class="sp-lbl">All Labels</span><label class="spt" for="v-alllabels"><input type="checkbox" id="v-alllabels" checked onchange="onVis()"><div class="spt-track"></div><div class="spt-thumb"></div></label></div>
-    <div class="sp-row"><span class="sp-lbl">Admin / Area Labels</span><label class="spt" for="v-admin"><input type="checkbox" id="v-admin" onchange="onVis()"><div class="spt-track"></div><div class="spt-thumb"></div></label></div>
-    <div class="sp-row"><span class="sp-lbl">Local / Inner Roads</span><label class="spt" for="v-local"><input type="checkbox" id="v-local" onchange="onVis()"><div class="spt-track"></div><div class="spt-thumb"></div></label></div>
-    <div class="sp-row"><span class="sp-lbl">Arterial Roads</span><label class="spt" for="v-arterial"><input type="checkbox" id="v-arterial" checked onchange="onVis()"><div class="spt-track"></div><div class="spt-thumb"></div></label></div>
-    <div class="sp-row"><span class="sp-lbl">Highways</span><label class="spt" for="v-highway"><input type="checkbox" id="v-highway" checked onchange="onVis()"><div class="spt-track"></div><div class="spt-thumb"></div></label></div>
-    <div class="sp-row"><span class="sp-lbl">Road Labels</span><label class="spt" for="v-roadlabel"><input type="checkbox" id="v-roadlabel" checked onchange="onVis()"><div class="spt-track"></div><div class="spt-thumb"></div></label></div>
-    <div class="sp-row"><span class="sp-lbl">POIs</span><label class="spt" for="v-poi"><input type="checkbox" id="v-poi" onchange="onVis()"><div class="spt-track"></div><div class="spt-thumb"></div></label></div>
-    <div class="sp-row"><span class="sp-lbl">Transit</span><label class="spt" for="v-transit"><input type="checkbox" id="v-transit" onchange="onVis()"><div class="spt-track"></div><div class="spt-thumb"></div></label></div>
-    <div class="sp-row"><span class="sp-lbl">Rail Stations</span><label class="spt" for="v-rail"><input type="checkbox" id="v-rail" checked onchange="onVis()"><div class="spt-track"></div><div class="spt-thumb"></div></label></div>
+  <div class="sp-sec"><div class="sp-sec-title">Arterial / Major Roads</div>
+    <div class="sp-row sp-feature-row"><label class="spt" for="v-art-fill"><input type="checkbox" id="v-art-fill" checked onchange="onS()"><div class="spt-track"></div><div class="spt-thumb"></div></label><span class="sp-flbl">Arterial Fill</span><div class="sp-fcontrols"><input type="color" id="c-art-fill" value="#d4d4d4" oninput="onS()" title="Color"><input type="range" id="o-art-fill" min="0" max="100" value="100" title="Opacity" oninput="document.getElementById('ov-art-fill').textContent=this.value+'%';onS()"><span id="ov-art-fill">100%</span></div></div>
+    <div class="sp-row sp-feature-row"><label class="spt" for="v-art-stroke"><input type="checkbox" id="v-art-stroke" checked onchange="onS()"><div class="spt-track"></div><div class="spt-thumb"></div></label><span class="sp-flbl">Arterial Casing</span><div class="sp-fcontrols"><input type="color" id="c-art-stroke" value="#bbbbbb" oninput="onS()" title="Color"><input type="range" id="o-art-stroke" min="0" max="100" value="100" title="Opacity" oninput="document.getElementById('ov-art-stroke').textContent=this.value+'%';onS()"><span id="ov-art-stroke">100%</span></div></div>
+    <div class="sp-row sp-feature-row"><label class="spt" for="v-art-label"><input type="checkbox" id="v-art-label" checked onchange="onS()"><div class="spt-track"></div><div class="spt-thumb"></div></label><span class="sp-flbl">Arterial Labels</span><div class="sp-fcontrols"><input type="color" id="c-art-label" value="#444444" oninput="onS()" title="Color"><input type="range" id="o-art-label" min="0" max="100" value="100" title="Opacity" oninput="document.getElementById('ov-art-label').textContent=this.value+'%';onS()"><span id="ov-art-label">100%</span></div></div>
   </div>
-  <div class="sp-sec">
-    <div class="sp-sec-title">Fine Adjustments</div>
-    <div class="sp-row"><span class="sp-lbl">Water Lightness</span><div class="sps"><input type="range" id="a-wl" min="-100" max="100" value="23" oninput="onAdj()"><span id="av-wl">23</span></div></div>
-    <div class="sp-row"><span class="sp-lbl">Water Saturation</span><div class="sps"><input type="range" id="a-ws" min="-100" max="100" value="-39" oninput="onAdj()"><span id="av-ws">-39</span></div></div>
-    <div class="sp-row"><span class="sp-lbl">Road Lightness</span><div class="sps"><input type="range" id="a-rl" min="-100" max="100" value="45" oninput="onAdj()"><span id="av-rl">45</span></div></div>
-    <div class="sp-row"><span class="sp-lbl">Road Saturation</span><div class="sps"><input type="range" id="a-rs" min="-100" max="100" value="-100" oninput="onAdj()"><span id="av-rs">-100</span></div></div>
+  <div class="sp-sec"><div class="sp-sec-title">Local / Inner Roads</div>
+    <div class="sp-row sp-feature-row"><label class="spt" for="v-local-fill"><input type="checkbox" id="v-local-fill"  onchange="onS()"><div class="spt-track"></div><div class="spt-thumb"></div></label><span class="sp-flbl">Local Road Fill</span><div class="sp-fcontrols"><input type="color" id="c-local-fill" value="#ffffff" oninput="onS()" title="Color"><input type="range" id="o-local-fill" min="0" max="100" value="100" title="Opacity" oninput="document.getElementById('ov-local-fill').textContent=this.value+'%';onS()"><span id="ov-local-fill">100%</span></div></div>
+    <div class="sp-row sp-feature-row"><label class="spt" for="v-local-stroke"><input type="checkbox" id="v-local-stroke"  onchange="onS()"><div class="spt-track"></div><div class="spt-thumb"></div></label><span class="sp-flbl">Local Road Casing</span><div class="sp-fcontrols"><input type="color" id="c-local-stroke" value="#dddddd" oninput="onS()" title="Color"><input type="range" id="o-local-stroke" min="0" max="100" value="100" title="Opacity" oninput="document.getElementById('ov-local-stroke').textContent=this.value+'%';onS()"><span id="ov-local-stroke">100%</span></div></div>
+    <div class="sp-row sp-feature-row"><label class="spt" for="v-local-label"><input type="checkbox" id="v-local-label"  onchange="onS()"><div class="spt-track"></div><div class="spt-thumb"></div></label><span class="sp-flbl">Local Road Labels</span><div class="sp-fcontrols"><input type="color" id="c-local-label" value="#666666" oninput="onS()" title="Color"><input type="range" id="o-local-label" min="0" max="100" value="100" title="Opacity" oninput="document.getElementById('ov-local-label').textContent=this.value+'%';onS()"><span id="ov-local-label">100%</span></div></div>
+  </div>
+  <div class="sp-sec"><div class="sp-sec-title">Transit &amp; Rail</div>
+    <div class="sp-row sp-feature-row"><label class="spt" for="v-rail-line"><input type="checkbox" id="v-rail-line" checked onchange="onS()"><div class="spt-track"></div><div class="spt-thumb"></div></label><span class="sp-flbl">Railway Lines</span><div class="sp-fcontrols"><input type="color" id="c-rail-line" value="#888888" oninput="onS()" title="Color"><input type="range" id="o-rail-line" min="0" max="100" value="100" title="Opacity" oninput="document.getElementById('ov-rail-line').textContent=this.value+'%';onS()"><span id="ov-rail-line">100%</span></div></div>
+    <div class="sp-row sp-feature-row"><label class="spt" for="v-rail-station"><input type="checkbox" id="v-rail-station" checked onchange="onS()"><div class="spt-track"></div><div class="spt-thumb"></div></label><span class="sp-flbl">Railway Stations</span><div class="sp-fcontrols"><input type="color" id="c-rail-station" value="#888888" oninput="onS()" title="Color"><input type="range" id="o-rail-station" min="0" max="100" value="100" title="Opacity" oninput="document.getElementById('ov-rail-station').textContent=this.value+'%';onS()"><span id="ov-rail-station">100%</span></div></div>
+    <div class="sp-row sp-feature-row"><label class="spt" for="v-metro"><input type="checkbox" id="v-metro" checked onchange="onS()"><div class="spt-track"></div><div class="spt-thumb"></div></label><span class="sp-flbl">Metro / Rapid Transit</span><div class="sp-fcontrols"><input type="color" id="c-metro" value="#555555" oninput="onS()" title="Color"><input type="range" id="o-metro" min="0" max="100" value="100" title="Opacity" oninput="document.getElementById('ov-metro').textContent=this.value+'%';onS()"><span id="ov-metro">100%</span></div></div>
+    <div class="sp-row sp-feature-row"><label class="spt" for="v-bus"><input type="checkbox" id="v-bus"  onchange="onS()"><div class="spt-track"></div><div class="spt-thumb"></div></label><span class="sp-flbl">Bus Stops</span><div class="sp-fcontrols"><input type="color" id="c-bus" value="#888888" oninput="onS()" title="Color"><input type="range" id="o-bus" min="0" max="100" value="100" title="Opacity" oninput="document.getElementById('ov-bus').textContent=this.value+'%';onS()"><span id="ov-bus">100%</span></div></div>
+    <div class="sp-row sp-feature-row"><label class="spt" for="v-transit-label"><input type="checkbox" id="v-transit-label" checked onchange="onS()"><div class="spt-track"></div><div class="spt-thumb"></div></label><span class="sp-flbl">Transit Labels</span><div class="sp-fcontrols"><input type="color" id="c-transit-label" value="#555555" oninput="onS()" title="Color"><input type="range" id="o-transit-label" min="0" max="100" value="100" title="Opacity" oninput="document.getElementById('ov-transit-label').textContent=this.value+'%';onS()"><span id="ov-transit-label">100%</span></div></div>
+  </div>
+  <div class="sp-sec"><div class="sp-sec-title">Points of Interest</div>
+    <div class="sp-row sp-feature-row"><label class="spt" for="v-poi-general"><input type="checkbox" id="v-poi-general"  onchange="onS()"><div class="spt-track"></div><div class="spt-thumb"></div></label><span class="sp-flbl">General POI</span><div class="sp-fcontrols"><input type="color" id="c-poi-general" value="#888888" oninput="onS()" title="Color"><input type="range" id="o-poi-general" min="0" max="100" value="100" title="Opacity" oninput="document.getElementById('ov-poi-general').textContent=this.value+'%';onS()"><span id="ov-poi-general">100%</span></div></div>
+    <div class="sp-row sp-feature-row"><label class="spt" for="v-poi-medical"><input type="checkbox" id="v-poi-medical"  onchange="onS()"><div class="spt-track"></div><div class="spt-thumb"></div></label><span class="sp-flbl">Medical / Hospitals</span><div class="sp-fcontrols"><input type="color" id="c-poi-medical" value="#cc6666" oninput="onS()" title="Color"><input type="range" id="o-poi-medical" min="0" max="100" value="100" title="Opacity" oninput="document.getElementById('ov-poi-medical').textContent=this.value+'%';onS()"><span id="ov-poi-medical">100%</span></div></div>
+    <div class="sp-row sp-feature-row"><label class="spt" for="v-poi-religious"><input type="checkbox" id="v-poi-religious"  onchange="onS()"><div class="spt-track"></div><div class="spt-thumb"></div></label><span class="sp-flbl">Religious / Temples</span><div class="sp-fcontrols"><input type="color" id="c-poi-religious" value="#886644" oninput="onS()" title="Color"><input type="range" id="o-poi-religious" min="0" max="100" value="100" title="Opacity" oninput="document.getElementById('ov-poi-religious').textContent=this.value+'%';onS()"><span id="ov-poi-religious">100%</span></div></div>
+    <div class="sp-row sp-feature-row"><label class="spt" for="v-poi-parks"><input type="checkbox" id="v-poi-parks"  onchange="onS()"><div class="spt-track"></div><div class="spt-thumb"></div></label><span class="sp-flbl">Parks &amp; Nature POI</span><div class="sp-fcontrols"><input type="color" id="c-poi-parks" value="#559944" oninput="onS()" title="Color"><input type="range" id="o-poi-parks" min="0" max="100" value="100" title="Opacity" oninput="document.getElementById('ov-poi-parks').textContent=this.value+'%';onS()"><span id="ov-poi-parks">100%</span></div></div>
+    <div class="sp-row sp-feature-row"><label class="spt" for="v-poi-shopping"><input type="checkbox" id="v-poi-shopping"  onchange="onS()"><div class="spt-track"></div><div class="spt-thumb"></div></label><span class="sp-flbl">Shopping</span><div class="sp-fcontrols"><input type="color" id="c-poi-shopping" value="#886688" oninput="onS()" title="Color"><input type="range" id="o-poi-shopping" min="0" max="100" value="100" title="Opacity" oninput="document.getElementById('ov-poi-shopping').textContent=this.value+'%';onS()"><span id="ov-poi-shopping">100%</span></div></div>
+    <div class="sp-row sp-feature-row"><label class="spt" for="v-poi-food"><input type="checkbox" id="v-poi-food"  onchange="onS()"><div class="spt-track"></div><div class="spt-thumb"></div></label><span class="sp-flbl">Food &amp; Dining</span><div class="sp-fcontrols"><input type="color" id="c-poi-food" value="#bb7744" oninput="onS()" title="Color"><input type="range" id="o-poi-food" min="0" max="100" value="100" title="Opacity" oninput="document.getElementById('ov-poi-food').textContent=this.value+'%';onS()"><span id="ov-poi-food">100%</span></div></div>
+    <div class="sp-row sp-feature-row"><label class="spt" for="v-poi-schools"><input type="checkbox" id="v-poi-schools"  onchange="onS()"><div class="spt-track"></div><div class="spt-thumb"></div></label><span class="sp-flbl">Schools</span><div class="sp-fcontrols"><input type="color" id="c-poi-schools" value="#7788aa" oninput="onS()" title="Color"><input type="range" id="o-poi-schools" min="0" max="100" value="100" title="Opacity" oninput="document.getElementById('ov-poi-schools').textContent=this.value+'%';onS()"><span id="ov-poi-schools">100%</span></div></div>
+    <div class="sp-row sp-feature-row"><label class="spt" for="v-poi-label"><input type="checkbox" id="v-poi-label"  onchange="onS()"><div class="spt-track"></div><div class="spt-thumb"></div></label><span class="sp-flbl">POI Labels</span><div class="sp-fcontrols"><input type="color" id="c-poi-label" value="#555555" oninput="onS()" title="Color"><input type="range" id="o-poi-label" min="0" max="100" value="100" title="Opacity" oninput="document.getElementById('ov-poi-label').textContent=this.value+'%';onS()"><span id="ov-poi-label">100%</span></div></div>
+  </div>
+  <div class="sp-sec"><div class="sp-sec-title">Administrative Labels</div>
+    <div class="sp-row sp-feature-row"><label class="spt" for="v-admin-country"><input type="checkbox" id="v-admin-country"  onchange="onS()"><div class="spt-track"></div><div class="spt-thumb"></div></label><span class="sp-flbl">Country Labels</span><div class="sp-fcontrols"><input type="color" id="c-admin-country" value="#444444" oninput="onS()" title="Color"><input type="range" id="o-admin-country" min="0" max="100" value="100" title="Opacity" oninput="document.getElementById('ov-admin-country').textContent=this.value+'%';onS()"><span id="ov-admin-country">100%</span></div></div>
+    <div class="sp-row sp-feature-row"><label class="spt" for="v-admin-state"><input type="checkbox" id="v-admin-state"  onchange="onS()"><div class="spt-track"></div><div class="spt-thumb"></div></label><span class="sp-flbl">State / Province</span><div class="sp-fcontrols"><input type="color" id="c-admin-state" value="#444444" oninput="onS()" title="Color"><input type="range" id="o-admin-state" min="0" max="100" value="100" title="Opacity" oninput="document.getElementById('ov-admin-state').textContent=this.value+'%';onS()"><span id="ov-admin-state">100%</span></div></div>
+    <div class="sp-row sp-feature-row"><label class="spt" for="v-admin-city"><input type="checkbox" id="v-admin-city"  onchange="onS()"><div class="spt-track"></div><div class="spt-thumb"></div></label><span class="sp-flbl">City / Locality</span><div class="sp-fcontrols"><input type="color" id="c-admin-city" value="#444444" oninput="onS()" title="Color"><input type="range" id="o-admin-city" min="0" max="100" value="100" title="Opacity" oninput="document.getElementById('ov-admin-city').textContent=this.value+'%';onS()"><span id="ov-admin-city">100%</span></div></div>
+    <div class="sp-row sp-feature-row"><label class="spt" for="v-admin-neighbourhood"><input type="checkbox" id="v-admin-neighbourhood"  onchange="onS()"><div class="spt-track"></div><div class="spt-thumb"></div></label><span class="sp-flbl">Neighbourhood</span><div class="sp-fcontrols"><input type="color" id="c-admin-neighbourhood" value="#555555" oninput="onS()" title="Color"><input type="range" id="o-admin-neighbourhood" min="0" max="100" value="100" title="Opacity" oninput="document.getElementById('ov-admin-neighbourhood').textContent=this.value+'%';onS()"><span id="ov-admin-neighbourhood">100%</span></div></div>
+    <div class="sp-row sp-feature-row"><label class="spt" for="v-admin-parcel"><input type="checkbox" id="v-admin-parcel"  onchange="onS()"><div class="spt-track"></div><div class="spt-thumb"></div></label><span class="sp-flbl">Land Parcel</span><div class="sp-fcontrols"><input type="color" id="c-admin-parcel" value="#777777" oninput="onS()" title="Color"><input type="range" id="o-admin-parcel" min="0" max="100" value="100" title="Opacity" oninput="document.getElementById('ov-admin-parcel').textContent=this.value+'%';onS()"><span id="ov-admin-parcel">100%</span></div></div>
+  </div>
+  <div class="sp-sec"><div class="sp-sec-title">Borders</div>
+    <div class="sp-row sp-feature-row"><label class="spt" for="v-border-country"><input type="checkbox" id="v-border-country"  onchange="onS()"><div class="spt-track"></div><div class="spt-thumb"></div></label><span class="sp-flbl">Country Borders</span><div class="sp-fcontrols"><input type="color" id="c-border-country" value="#ccbbaa" oninput="onS()" title="Color"><input type="range" id="o-border-country" min="0" max="100" value="100" title="Opacity" oninput="document.getElementById('ov-border-country').textContent=this.value+'%';onS()"><span id="ov-border-country">100%</span></div></div>
+    <div class="sp-row sp-feature-row"><label class="spt" for="v-border-state"><input type="checkbox" id="v-border-state"  onchange="onS()"><div class="spt-track"></div><div class="spt-thumb"></div></label><span class="sp-flbl">State / District Borders</span><div class="sp-fcontrols"><input type="color" id="c-border-state" value="#ddccbb" oninput="onS()" title="Color"><input type="range" id="o-border-state" min="0" max="100" value="100" title="Opacity" oninput="document.getElementById('ov-border-state').textContent=this.value+'%';onS()"><span id="ov-border-state">100%</span></div></div>
   </div>
 </div>
 
@@ -776,64 +805,213 @@ const ASPECTS={'16:9':[16,9],'4:3':[4,3],'3:2':[3,2],'1:1':[1,1],'2:1':[2,1],'A4
 const TILE_SIZE=640;
 
 // ═══════════════════════════════════════════════════════
-// MAP STYLE STATE
+// MAP STYLE STATE — granular per-layer controls
 // ═══════════════════════════════════════════════════════
-let SC={land:'#f2f2f2',water:'#3a2d1c',road:'#d4d4d4',roadlabel:'#444444',admin:'#444444'};
-let SA={wl:23,ws:-39,rl:45,rs:-100};
-let SV={alllabels:true,admin:false,local:false,arterial:true,highway:true,roadlabel:true,poi:false,transit:false,rail:true};
-const SC0={...SC},SA0={...SA},SV0={...SV};
+// Each layer: {v: visible, c: color, o: opacity 0-100}
+const LAYERS = {
+  // Land & Water
+  'land':              {v:true,  c:'#f2f2f2', o:100},
+  'parks':             {v:true,  c:'#e5f0e0', o:100},
+  'industrial':        {v:true,  c:'#e8e8e4', o:100},
+  'commercial':        {v:true,  c:'#f0ece4', o:100},
+  'residential':       {v:true,  c:'#f2f2f2', o:100},
+  'water':             {v:true,  c:'#3a2d1c', o:100},
+  'waterlabel':        {v:true,  c:'#3a2d1c', o:70},
+  // Highways
+  'hwy-fill':          {v:true,  c:'#e0d0b0', o:100},
+  'hwy-stroke':        {v:true,  c:'#c8b898', o:100},
+  'hwy-label':         {v:true,  c:'#444444', o:100},
+  'hwy-icon':          {v:false, c:'#888888', o:100},
+  // Arterial
+  'art-fill':          {v:true,  c:'#d4d4d4', o:100},
+  'art-stroke':        {v:true,  c:'#bbbbbb', o:100},
+  'art-label':         {v:true,  c:'#444444', o:100},
+  // Local
+  'local-fill':        {v:false, c:'#ffffff', o:100},
+  'local-stroke':      {v:false, c:'#dddddd', o:100},
+  'local-label':       {v:false, c:'#666666', o:100},
+  // Transit
+  'rail-line':         {v:true,  c:'#888888', o:100},
+  'rail-station':      {v:true,  c:'#888888', o:100},
+  'metro':             {v:true,  c:'#555555', o:100},
+  'bus':               {v:false, c:'#888888', o:100},
+  'transit-label':     {v:true,  c:'#555555', o:100},
+  // POI
+  'poi-general':       {v:false, c:'#888888', o:100},
+  'poi-medical':       {v:false, c:'#cc6666', o:100},
+  'poi-religious':     {v:false, c:'#886644', o:100},
+  'poi-parks':         {v:false, c:'#559944', o:100},
+  'poi-shopping':      {v:false, c:'#886688', o:100},
+  'poi-food':          {v:false, c:'#bb7744', o:100},
+  'poi-schools':       {v:false, c:'#7788aa', o:100},
+  'poi-label':         {v:false, c:'#555555', o:100},
+  // Admin
+  'admin-country':     {v:false, c:'#444444', o:100},
+  'admin-state':       {v:false, c:'#444444', o:100},
+  'admin-city':        {v:false, c:'#444444', o:100},
+  'admin-neighbourhood':{v:false,c:'#555555', o:100},
+  'admin-parcel':      {v:false, c:'#777777', o:100},
+  // Borders
+  'border-country':    {v:false, c:'#ccbbaa', o:100},
+  'border-state':      {v:false, c:'#ddccbb', o:100},
+};
+
+function L(key){ return LAYERS[key]; }
+function vis(key){ return L(key).v ? 'on' : 'off'; }
+function col(key){ return L(key).c; }
+function opa(key){ return (L(key).o/100).toFixed(2); }
+
+// Helper: color with opacity baked in (for geometry fills)
+function colWithOpa(key){
+  const c=L(key).c;
+  const o=L(key).o/100;
+  // Return as hex — apply opacity via Google Maps lightness instead
+  return c;
+}
 
 function buildStyle(){
   const s=[];
+
+  // Kill all default strokes globally
   s.push({elementType:'labels.text.stroke',stylers:[{visibility:'off'}]});
-  s.push({featureType:'administrative',elementType:'labels.text.fill',stylers:[{color:SC.admin}]});
-  ['country','province','locality','neighborhood','land_parcel'].forEach(t=>
-    s.push({featureType:`administrative.${t}`,elementType:'all',stylers:[{visibility:SV.admin?'on':'off'}]}));
-  if(!SV.alllabels)s.push({elementType:'labels',stylers:[{visibility:'off'}]});
-  s.push({featureType:'landscape',elementType:'all',stylers:[{color:SC.land},{visibility:'on'}]});
-  s.push({featureType:'poi',elementType:'all',stylers:[{visibility:SV.poi?'on':'off'}]});
-  s.push({featureType:'road',elementType:'all',stylers:[{saturation:SA.rs},{lightness:SA.rl}]});
-  s.push({featureType:'road',elementType:'geometry.fill',stylers:[{color:SC.road}]});
-  s.push({featureType:'road',elementType:'geometry.stroke',stylers:[{color:SC.road}]});
-  s.push({featureType:'road',elementType:'labels.text.fill',stylers:[{color:SC.roadlabel}]});
-  s.push({featureType:'road',elementType:'labels.text.stroke',stylers:[{visibility:'off'}]});
-  s.push({featureType:'road.highway',elementType:'all',stylers:[{visibility:SV.highway?'simplified':'off'}]});
-  s.push({featureType:'road.highway',elementType:'labels',stylers:[{visibility:SV.roadlabel&&SV.highway?'on':'off'}]});
-  s.push({featureType:'road.highway',elementType:'labels.text.fill',stylers:[{color:SC.roadlabel}]});
+
+  // ── LAND & LANDSCAPE ──
+  s.push({featureType:'landscape',elementType:'all',stylers:[{color:col('land')},{visibility:'on'},{gamma:parseFloat(opa('land'))}]});
+  s.push({featureType:'landscape.natural',elementType:'geometry.fill',stylers:[{color:col('parks')},{visibility:vis('parks')}]});
+  s.push({featureType:'landscape.man_made',elementType:'geometry.fill',stylers:[{color:col('industrial')},{visibility:vis('industrial')}]});
+  s.push({featureType:'landscape.man_made',elementType:'geometry',stylers:[{color:col('commercial')},{visibility:vis('commercial')}]});
+  // Residential uses land base color
+  s.push({featureType:'poi.park',elementType:'geometry.fill',stylers:[{color:col('parks')},{visibility:vis('parks')}]});
+
+  // ── WATER ──
+  s.push({featureType:'water',elementType:'geometry.fill',stylers:[{color:col('water')},{visibility:vis('water')}]});
+  s.push({featureType:'water',elementType:'labels.text.fill',stylers:[{color:col('waterlabel')},{visibility:vis('waterlabel')}]});
+  s.push({featureType:'water',elementType:'labels.text.stroke',stylers:[{visibility:'off'}]});
+
+  // ── HIGHWAYS ──
+  s.push({featureType:'road.highway',elementType:'geometry.fill',stylers:[{color:col('hwy-fill')},{visibility:vis('hwy-fill')}]});
+  s.push({featureType:'road.highway',elementType:'geometry.stroke',stylers:[{color:col('hwy-stroke')},{visibility:vis('hwy-stroke')}]});
+  s.push({featureType:'road.highway',elementType:'labels.text.fill',stylers:[{color:col('hwy-label')},{visibility:vis('hwy-label')}]});
   s.push({featureType:'road.highway',elementType:'labels.text.stroke',stylers:[{visibility:'off'}]});
-  s.push({featureType:'road.arterial',elementType:'all',stylers:[{visibility:SV.arterial?'on':'off'}]});
-  s.push({featureType:'road.arterial',elementType:'labels',stylers:[{visibility:SV.roadlabel&&SV.arterial?'on':'off'}]});
-  s.push({featureType:'road.arterial',elementType:'labels.text.fill',stylers:[{color:SC.roadlabel}]});
+  s.push({featureType:'road.highway',elementType:'labels.icon',stylers:[{visibility:vis('hwy-icon')}]});
+
+  // ── ARTERIAL ROADS ──
+  s.push({featureType:'road.arterial',elementType:'geometry.fill',stylers:[{color:col('art-fill')},{visibility:vis('art-fill')}]});
+  s.push({featureType:'road.arterial',elementType:'geometry.stroke',stylers:[{color:col('art-stroke')},{visibility:vis('art-stroke')}]});
+  s.push({featureType:'road.arterial',elementType:'labels.text.fill',stylers:[{color:col('art-label')},{visibility:vis('art-label')}]});
   s.push({featureType:'road.arterial',elementType:'labels.text.stroke',stylers:[{visibility:'off'}]});
   s.push({featureType:'road.arterial',elementType:'labels.icon',stylers:[{visibility:'off'}]});
-  s.push({featureType:'road.local',elementType:'all',stylers:[{visibility:SV.local?'on':'off'}]});
-  s.push({featureType:'road.local',elementType:'labels',stylers:[{visibility:SV.local&&SV.roadlabel?'on':'off'}]});
-  s.push({featureType:'road.local',elementType:'labels.text.fill',stylers:[{color:SC.roadlabel}]});
+
+  // ── LOCAL / INNER ROADS ──
+  s.push({featureType:'road.local',elementType:'geometry.fill',stylers:[{color:col('local-fill')},{visibility:vis('local-fill')}]});
+  s.push({featureType:'road.local',elementType:'geometry.stroke',stylers:[{color:col('local-stroke')},{visibility:vis('local-stroke')}]});
+  s.push({featureType:'road.local',elementType:'labels.text.fill',stylers:[{color:col('local-label')},{visibility:vis('local-label')}]});
   s.push({featureType:'road.local',elementType:'labels.text.stroke',stylers:[{visibility:'off'}]});
-  s.push({featureType:'transit',elementType:'all',stylers:[{visibility:SV.transit?'on':'off'}]});
-  s.push({featureType:'transit.station.rail',elementType:'all',stylers:[{visibility:SV.rail?'on':'off'}]});
-  s.push({featureType:'water',elementType:'all',stylers:[{color:SC.water},{visibility:'on'},{saturation:SA.ws},{lightness:SA.wl}]});
+  s.push({featureType:'road.local',elementType:'labels.icon',stylers:[{visibility:'off'}]});
+
+  // ── TRANSIT & RAIL ──
+  s.push({featureType:'transit.line',elementType:'geometry',stylers:[{color:col('rail-line')},{visibility:vis('rail-line')}]});
+  s.push({featureType:'transit.station.rail',elementType:'all',stylers:[{color:col('rail-station')},{visibility:vis('rail-station')}]});
+  s.push({featureType:'transit.station',elementType:'labels.text.fill',stylers:[{color:col('transit-label')},{visibility:vis('transit-label')}]});
+  s.push({featureType:'transit.station',elementType:'labels.text.stroke',stylers:[{visibility:'off'}]});
+  s.push({featureType:'transit.station',elementType:'labels.icon',stylers:[{visibility:vis('bus')}]});
+
+  // ── POI ──
+  s.push({featureType:'poi',elementType:'all',stylers:[{visibility:vis('poi-general')}]});
+  s.push({featureType:'poi',elementType:'labels.text.fill',stylers:[{color:col('poi-label')},{visibility:vis('poi-label')}]});
+  s.push({featureType:'poi',elementType:'labels.text.stroke',stylers:[{visibility:'off'}]});
+  s.push({featureType:'poi.medical',elementType:'all',stylers:[{color:col('poi-medical')},{visibility:vis('poi-medical')}]});
+  s.push({featureType:'poi.place_of_worship',elementType:'all',stylers:[{color:col('poi-religious')},{visibility:vis('poi-religious')}]});
+  s.push({featureType:'poi.park',elementType:'labels',stylers:[{color:col('poi-parks')},{visibility:vis('poi-parks')}]});
+  s.push({featureType:'poi.attraction',elementType:'all',stylers:[{color:col('poi-shopping')},{visibility:vis('poi-shopping')}]});
+  s.push({featureType:'poi.food',elementType:'all',stylers:[{color:col('poi-food')},{visibility:vis('poi-food')}]});
+  s.push({featureType:'poi.school',elementType:'all',stylers:[{color:col('poi-schools')},{visibility:vis('poi-schools')}]});
+
+  // ── ADMINISTRATIVE LABELS ──
+  s.push({featureType:'administrative.country',elementType:'labels.text.fill',stylers:[{color:col('admin-country')},{visibility:vis('admin-country')}]});
+  s.push({featureType:'administrative.country',elementType:'labels.text.stroke',stylers:[{visibility:'off'}]});
+  s.push({featureType:'administrative.province',elementType:'labels.text.fill',stylers:[{color:col('admin-state')},{visibility:vis('admin-state')}]});
+  s.push({featureType:'administrative.province',elementType:'labels.text.stroke',stylers:[{visibility:'off'}]});
+  s.push({featureType:'administrative.locality',elementType:'labels.text.fill',stylers:[{color:col('admin-city')},{visibility:vis('admin-city')}]});
+  s.push({featureType:'administrative.locality',elementType:'labels.text.stroke',stylers:[{visibility:'off'}]});
+  s.push({featureType:'administrative.neighborhood',elementType:'labels.text.fill',stylers:[{color:col('admin-neighbourhood')},{visibility:vis('admin-neighbourhood')}]});
+  s.push({featureType:'administrative.neighborhood',elementType:'labels.text.stroke',stylers:[{visibility:'off'}]});
+  s.push({featureType:'administrative.land_parcel',elementType:'labels.text.fill',stylers:[{color:col('admin-parcel')},{visibility:vis('admin-parcel')}]});
+  s.push({featureType:'administrative.land_parcel',elementType:'labels.text.stroke',stylers:[{visibility:'off'}]});
+
+  // ── BORDERS ──
+  s.push({featureType:'administrative.country',elementType:'geometry.stroke',stylers:[{color:col('border-country')},{visibility:vis('border-country')}]});
+  s.push({featureType:'administrative.province',elementType:'geometry.stroke',stylers:[{color:col('border-state')},{visibility:vis('border-state')}]});
+
   return s;
 }
 
-function styleToParams(styleArr){
-  return styleArr.map(rule=>{
-    let parts=[];
-    if(rule.featureType)parts.push('feature:'+rule.featureType);
-    if(rule.elementType)parts.push('element:'+rule.elementType);
-    if(rule.stylers)rule.stylers.forEach(st=>Object.entries(st).forEach(([k,v])=>{
-      parts.push(k+':'+(typeof v==='string'?v.replace('#','0x'):v));
-    }));
-    return 'style='+encodeURIComponent(parts.join('|'));
-  }).join('&');
+// Single handler for all style panel changes
+function onS(){
+  // Read all layer controls from DOM
+  Object.keys(LAYERS).forEach(key=>{
+    const vi=document.getElementById('v-'+key);
+    const ci=document.getElementById('c-'+key);
+    const oi=document.getElementById('o-'+key);
+    if(vi) LAYERS[key].v=vi.checked;
+    if(ci) LAYERS[key].c=ci.value;
+    if(oi) LAYERS[key].o=parseInt(oi.value);
+  });
+  if(map)map.setOptions({styles:buildStyle()});
+  scheduleSave();
 }
 
-function applyStyle(){if(map)map.setOptions({styles:buildStyle()});}
-function onColor(k,v){SC[k]=v;document.getElementById('h-'+k).textContent=v;applyStyle();}
-function onVis(){Object.keys(SV).forEach(k=>{const el=document.getElementById('v-'+k);if(el)SV[k]=el.checked;});applyStyle();}
-function onAdj(){[['wl','a-wl'],['ws','a-ws'],['rl','a-rl'],['rs','a-rs']].forEach(([k,id])=>{const el=document.getElementById(id);if(el){SA[k]=parseInt(el.value);document.getElementById('av-'+k).textContent=el.value;}});applyStyle();}
-function resetStyle(){Object.assign(SC,SC0);Object.assign(SA,SA0);Object.assign(SV,SV0);Object.entries(SC).forEach(([k,v])=>{const ci=document.getElementById('c-'+k),hi=document.getElementById('h-'+k);if(ci)ci.value=v;if(hi)hi.textContent=v;});[['wl',23],['ws',-39],['rl',45],['rs',-100]].forEach(([k,v])=>{const el=document.getElementById('a-'+k),av=document.getElementById('av-'+k);if(el)el.value=v;if(av)av.textContent=v;});Object.entries(SV).forEach(([k,v])=>{const el=document.getElementById('v-'+k);if(el)el.checked=v;});applyStyle();}
-function copyJSON(){navigator.clipboard.writeText(JSON.stringify(buildStyle(),null,2)).then(()=>{const b=event.target;b.textContent='Copied!';setTimeout(()=>b.textContent='Copy JSON',1500);});}
+// Legacy aliases so old save/restore code still works
+function onColor(k,v){ if(LAYERS[k]){LAYERS[k].c=v;} onS(); }
+function onVis(){ onS(); }
+function onAdj(){ onS(); }
+function SC(){} // no-op, kept for compat
+
+function resetStyle(){
+  const DEFAULTS = {
+    'land':{v:true,c:'#f2f2f2',o:100},'parks':{v:true,c:'#e5f0e0',o:100},
+    'industrial':{v:true,c:'#e8e8e4',o:100},'commercial':{v:true,c:'#f0ece4',o:100},
+    'residential':{v:true,c:'#f2f2f2',o:100},'water':{v:true,c:'#3a2d1c',o:100},
+    'waterlabel':{v:true,c:'#3a2d1c',o:70},'hwy-fill':{v:true,c:'#e0d0b0',o:100},
+    'hwy-stroke':{v:true,c:'#c8b898',o:100},'hwy-label':{v:true,c:'#444444',o:100},
+    'hwy-icon':{v:false,c:'#888888',o:100},'art-fill':{v:true,c:'#d4d4d4',o:100},
+    'art-stroke':{v:true,c:'#bbbbbb',o:100},'art-label':{v:true,c:'#444444',o:100},
+    'local-fill':{v:false,c:'#ffffff',o:100},'local-stroke':{v:false,c:'#dddddd',o:100},
+    'local-label':{v:false,c:'#666666',o:100},'rail-line':{v:true,c:'#888888',o:100},
+    'rail-station':{v:true,c:'#888888',o:100},'metro':{v:true,c:'#555555',o:100},
+    'bus':{v:false,c:'#888888',o:100},'transit-label':{v:true,c:'#555555',o:100},
+    'poi-general':{v:false,c:'#888888',o:100},'poi-medical':{v:false,c:'#cc6666',o:100},
+    'poi-religious':{v:false,c:'#886644',o:100},'poi-parks':{v:false,c:'#559944',o:100},
+    'poi-shopping':{v:false,c:'#886688',o:100},'poi-food':{v:false,c:'#bb7744',o:100},
+    'poi-schools':{v:false,c:'#7788aa',o:100},'poi-label':{v:false,c:'#555555',o:100},
+    'admin-country':{v:false,c:'#444444',o:100},'admin-state':{v:false,c:'#444444',o:100},
+    'admin-city':{v:false,c:'#444444',o:100},'admin-neighbourhood':{v:false,c:'#555555',o:100},
+    'admin-parcel':{v:false,c:'#777777',o:100},'border-country':{v:false,c:'#ccbbaa',o:100},
+    'border-state':{v:false,c:'#ddccbb',o:100},
+  };
+  Object.assign(LAYERS, JSON.parse(JSON.stringify(DEFAULTS)));
+  // Sync UI
+  Object.entries(LAYERS).forEach(([key,val])=>{
+    const vi=document.getElementById('v-'+key);
+    const ci=document.getElementById('c-'+key);
+    const oi=document.getElementById('o-'+key);
+    const ov=document.getElementById('ov-'+key);
+    if(vi)vi.checked=val.v;
+    if(ci)ci.value=val.c;
+    if(oi)oi.value=val.o;
+    if(ov)ov.textContent=val.o+'%';
+  });
+  if(map)map.setOptions({styles:buildStyle()});
+}
+
+function copyJSON(){
+  navigator.clipboard.writeText(JSON.stringify(buildStyle(),null,2)).then(()=>{
+    const b=event.target;b.textContent='Copied!';setTimeout(()=>b.textContent='Copy JSON',1500);
+  });
+}
+
+function applyStyle(){ if(map)map.setOptions({styles:buildStyle()}); }
+
 
 // ═══════════════════════════════════════════════════════
 // STYLE PANEL TOGGLE
@@ -2726,12 +2904,12 @@ async function saveState(){
   const markerMeta=markers.map((m,i)=>({id:'mk'+i,x:m.x,y:m.y,w:m.w,h:m.h}));
 
   const state={
-    v:3,
+    v:4,
     ts:Date.now(),
     map:{lat:center.lat(),lng:center.lng(),zoom:map.getZoom()},
     fineZoom:parseFloat(document.getElementById('fine-zoom').value),
     aspect:document.getElementById('aspect').value,
-    SC:{...SC},SA:{...SA},SV:{...SV},
+    layers:JSON.parse(JSON.stringify(LAYERS)),
     shapes:shapeData,
     markerMeta,
     highlights:hlData,
@@ -2771,21 +2949,20 @@ async function restoreState(){
     map.setCenter({lat:state.map.lat,lng:state.map.lng});
     map.setZoom(state.map.zoom);
 
-    // Style
-    if(state.SC)Object.assign(SC,state.SC);
-    if(state.SA)Object.assign(SA,state.SA);
-    if(state.SV)Object.assign(SV,state.SV);
-    Object.entries(SC).forEach(([k,v])=>{
-      const ci=document.getElementById('c-'+k),hi=document.getElementById('h-'+k);
-      if(ci)ci.value=v;if(hi)hi.textContent=v;
-    });
-    [['wl',SA.wl],['ws',SA.ws],['rl',SA.rl],['rs',SA.rs]].forEach(([k,v])=>{
-      const el=document.getElementById('a-'+k),av=document.getElementById('av-'+k);
-      if(el)el.value=v;if(av)av.textContent=v;
-    });
-    Object.entries(SV).forEach(([k,v])=>{
-      const el=document.getElementById('v-'+k);if(el)el.checked=v;
-    });
+    // Style — restore LAYERS and sync UI
+    if(state.layers){
+      Object.assign(LAYERS, state.layers);
+      Object.entries(LAYERS).forEach(([key,val])=>{
+        const vi=document.getElementById('v-'+key);
+        const ci=document.getElementById('c-'+key);
+        const oi=document.getElementById('o-'+key);
+        const ov=document.getElementById('ov-'+key);
+        if(vi)vi.checked=val.v;
+        if(ci)ci.value=val.c;
+        if(oi)oi.value=val.o;
+        if(ov)ov.textContent=val.o+'%';
+      });
+    }
     applyStyle();
 
     // Aspect
