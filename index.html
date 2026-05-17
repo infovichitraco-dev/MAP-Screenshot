@@ -876,7 +876,7 @@ function buildStyle(){
   s.push({elementType:'labels.text.stroke',stylers:[{visibility:'off'}]});
 
   // ── LAND & LANDSCAPE ──
-  s.push({featureType:'landscape',elementType:'all',stylers:[{color:col('land')},{visibility:'on'},{gamma:parseFloat(opa('land'))}]});
+  s.push({featureType:'landscape',elementType:'all',stylers:[{color:col('land')},{visibility:'on'}]});
   s.push({featureType:'landscape.natural',elementType:'geometry.fill',stylers:[{color:col('parks')},{visibility:vis('parks')}]});
   s.push({featureType:'landscape.man_made',elementType:'geometry.fill',stylers:[{color:col('industrial')},{visibility:vis('industrial')}]});
   s.push({featureType:'landscape.man_made',elementType:'geometry',stylers:[{color:col('commercial')},{visibility:vis('commercial')}]});
