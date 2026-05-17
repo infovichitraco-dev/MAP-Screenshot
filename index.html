@@ -241,13 +241,6 @@ input[type="range"]{accent-color:var(--gold);cursor:pointer;}
 #feature-panel.ui-ready{display:flex!important;}
 #statusbar.ui-ready{display:flex!important;}
 #save-indicator.ui-ready{display:block!important;}
-#map{
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-  z-index:1;
-}
 </style>
 <style>
 /* ── PASSWORD GATE ── */
@@ -466,7 +459,34 @@ input[type="range"]{accent-color:var(--gold);cursor:pointer;}
   </div>
 </div>
 
-	
+<!-- STAGE -->
+<div id="stage" ondragover="onDragOver(event)" ondrop="onDrop(event)">
+  <div id="map"></div>
+  <div id="overlay-layer"></div>
+  <svg id="svg-layer" class="select-mode" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <filter id="shadow-sm"><feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.3"/></filter>
+      <filter id="shadow-md"><feDropShadow dx="3" dy="3" stdDeviation="6" flood-opacity="0.4"/></filter>
+      <filter id="shadow-lg"><feDropShadow dx="5" dy="5" stdDeviation="10" flood-opacity="0.5"/></filter>
+      <filter id="shadow-none"></filter>
+      <marker id="arrowhead" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L8,3 L0,6 Z" fill="currentColor"/>
+      </marker>
+      <marker id="arrowhead-sel" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L8,3 L0,6 Z" fill="#C9A96E"/>
+      </marker>
+    </defs>
+    <g id="shapes-group"></g>
+  </svg>
+  <div id="crop-frame">
+    <div id="crop-tag">Export Frame — pan &amp; zoom map inside</div>
+    <div class="crop-rule cr-v1"></div><div class="crop-rule cr-v2"></div>
+    <div class="crop-rule cr-h1"></div><div class="crop-rule cr-h2"></div>
+    <div class="ccm ccm-tl"></div><div class="ccm ccm-tr"></div>
+    <div class="ccm ccm-bl"></div><div class="ccm ccm-br"></div>
+    <div id="crop-px"></div>
+  </div>
+</div>
 
 <!-- SHAPE PROPERTIES PANEL -->
 <div id="shape-props">
@@ -677,6 +697,8 @@ input[type="range"]{accent-color:var(--gold);cursor:pointer;}
   </div>
 </div>
 
+<!-- Maps loads synchronously so it's ready before unlock -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLzi_xut6Y6lgShdOkPCePTXreCqUBJVo&callback=initMap"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════
@@ -766,7 +788,14 @@ function toggleStylePanel(){
 let map,markers=[],selected=null;
 let cropX=0,cropY=0,cropW=0,cropH=0;
 
+// Called by Google Maps API when script loads — just flags readiness
 function initMap(){
+  window._mapsApiReady=true;
+}
+
+// Called explicitly after auth — actually creates the map
+function initMapNow(){
+  if(map)return; // already initialized
   map=new google.maps.Map(document.getElementById('map'),{
     center:CENTER,zoom:ZOOM,styles:buildStyle(),
     mapTypeControl:false,streetViewControl:false,
@@ -777,16 +806,13 @@ function initMap(){
   map.addListener('zoom_changed',()=>{updateStatus();updateExportInfo();});
   map.addListener('click',()=>{deselectShape();deselect();});
   google.maps.event.addListenerOnce(map,'idle',()=>{
-    // Force resize into now-visible container
     google.maps.event.trigger(map,'resize');
     map.setCenter(CENTER);
     initCrop();
     updateStatus();
-    // Hook autosave and highlight redraw
     setTimeout(()=>{
       try{hookAutosave();}catch(e){}
       try{hookHighlightRedraw();}catch(e){}
-      // Restore saved state if pending (fresh login)
       if(window._pendingRestore){
         window._pendingRestore=false;
         try{restoreState();}catch(e){console.warn('Restore failed:',e);}
@@ -2002,18 +2028,12 @@ function showUI(){
 }
 
 function unlockAndLoad(){
-  // Hide gate — map was already rendering underneath
   document.getElementById('pw-gate').style.display='none';
-  // Store session (24hr)
   sha256('dem-oak-'+Math.floor(Date.now()/86400000)).then(t=>sessionStorage.setItem('dem-oak-auth',t));
-  // Show UI chrome (header, toolbar, panels)
   showUI();
-  // Trigger state restore
   window._pendingRestore=true;
-  // If map already ready, restore now; otherwise initMap will catch _pendingRestore flag
-  if(map){
-    setTimeout(()=>{ restoreState(); }, 300);
-  }
+  // Maps API is already loaded (static script tag) — create the map now
+  initMapNow();
 }
 
 async function checkPassword(){
@@ -2333,25 +2353,15 @@ async function clearSavedState(){
 }
 
 // Check auth on page load
-function loadMapsScript(){
-  if(window._mapsLoaded)return;
-  window._mapsLoaded=true;
-  const s=document.createElement('script');
-  s.src=`https://maps.googleapis.com/maps/api/js?key=${API_KEY}&callback=initMap`;
-  s.async=true;
-  s.onerror=()=>alert('Google Maps failed to load. Check your API key and referrer settings in GCP.');
-  document.head.appendChild(s);
-}
+// Maps loads via static <script> tag at bottom of page (no async)
+// initMapNow() is called explicitly after auth — no race condition
 window.gm_authFailure=function(){
   alert('Google Maps API key rejected. Check GCP Console — ensure Maps JavaScript API is enabled and billing is active.');
 };
 
-// On page load: start map loading immediately (map div is always visible under pw-gate)
-// and check session auth in parallel
 window.addEventListener('load',()=>{
   openDB().catch(e=>console.warn('IndexedDB:',e));
-  loadMapsScript(); // map renders under the gate at full size
-  checkAuth();      // if session valid, gate hides and UI chrome shows
+  checkAuth(); // auto-login if session valid
 });
 
 // initMap is called directly by Google Maps — no wrapping needed.
