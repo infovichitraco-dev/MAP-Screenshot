@@ -806,10 +806,14 @@ function initMapNow(){
   map.addListener('zoom_changed',()=>{updateStatus();updateExportInfo();});
   map.addListener('click',()=>{deselectShape();deselect();});
   google.maps.event.addListenerOnce(map,'idle',()=>{
+    // Map is rendered — now show the UI chrome
+    showUI();
     google.maps.event.trigger(map,'resize');
-    map.setCenter(CENTER);
-    initCrop();
-    updateStatus();
+    setTimeout(()=>{
+      map.setCenter(CENTER);
+      initCrop();
+      updateStatus();
+    },100);
     setTimeout(()=>{
       try{hookAutosave();}catch(e){}
       try{hookHighlightRedraw();}catch(e){}
@@ -817,7 +821,7 @@ function initMapNow(){
         window._pendingRestore=false;
         try{restoreState();}catch(e){console.warn('Restore failed:',e);}
       }
-    },500);
+    },600);
   });
 }
 
@@ -2011,29 +2015,18 @@ async function sha256(str){
 }
 
 function showUI(){
-  // stage and map are always rendered (under pw-gate) so map initializes at full size
-  // we only need to show the UI chrome after auth
   ['header','draw-toolbar','feature-panel','statusbar','save-indicator'].forEach(id=>{
     const el=document.getElementById(id);
     if(el)el.classList.add('ui-ready');
   });
-  // Trigger map resize now that header/panels are visible (they affect stage dimensions)
-  setTimeout(()=>{
-    if(map){
-      google.maps.event.trigger(map,'resize');
-      map.setCenter(map.getCenter());
-      initCrop();
-    }
-  }, 350);
+  // Don't resize here — initMapNow handles resize after map is ready
 }
 
 function unlockAndLoad(){
   document.getElementById('pw-gate').style.display='none';
   sha256('dem-oak-'+Math.floor(Date.now()/86400000)).then(t=>sessionStorage.setItem('dem-oak-auth',t));
-  showUI();
   window._pendingRestore=true;
-  // Maps API is already loaded (static script tag) — create the map now
-  initMapNow();
+  initMapNow(); // showUI() is called inside initMapNow after map is idle
 }
 
 async function checkPassword(){
