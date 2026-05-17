@@ -43,13 +43,26 @@ input[type="range"]{accent-color:var(--gold);cursor:pointer;}
 #fp-head{padding:12px 14px 10px;border-bottom:1px solid var(--border);flex-shrink:0;}
 #fp-head h3{font-family:'Cormorant Garamond',serif;font-size:13px;font-weight:300;letter-spacing:0.1em;color:var(--sand);margin-bottom:2px;}
 #fp-head p{font-size:8px;color:var(--accent);letter-spacing:0.08em;}
-#fp-toolbar{display:flex;gap:6px;padding:8px 14px;border-bottom:1px solid var(--border);flex-shrink:0;}
+#fp-toolbar{display:flex;gap:6px;padding:8px 14px;border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;}
+#fp-pick-btn{flex:1;background:rgba(201,169,110,0.12);border:1px dashed var(--gold);color:var(--gold);font-family:'Archivo',sans-serif;font-size:8px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:6px 8px;cursor:pointer;transition:all 0.15s;}
+#fp-pick-btn.active{background:rgba(201,169,110,0.25);border-style:solid;}
+#fp-pick-btn:hover{background:rgba(201,169,110,0.2);}
+#pick-cursor{position:fixed;pointer-events:none;z-index:9000;display:none;transform:translate(-50%,-50%);width:32px;height:32px;}
+#pick-cursor svg{filter:drop-shadow(0 1px 3px rgba(0,0,0,0.5));}
+#pick-toast{position:fixed;bottom:44px;left:50%;transform:translateX(-50%);background:var(--gold);color:var(--bark);font-family:'Archivo',sans-serif;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;padding:6px 16px;z-index:600;pointer-events:none;opacity:0;transition:opacity 0.2s;white-space:nowrap;}
+#pick-toast.show{opacity:1;}
 #fp-scan-btn{flex:1;background:var(--sand);color:var(--bark);border:none;font-family:'Archivo',sans-serif;font-size:8px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;padding:6px 8px;cursor:pointer;transition:background 0.15s;}
 #fp-scan-btn:hover{background:var(--offwhite);}
 #fp-scan-btn:disabled{opacity:0.5;cursor:not-allowed;}
 #fp-clear-btn{background:rgba(226,201,168,0.08);border:1px solid var(--border);color:var(--sand);font-family:'Archivo',sans-serif;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;padding:6px 8px;cursor:pointer;}
 #fp-clear-btn:hover{background:rgba(226,201,168,0.18);}
 #fp-status{padding:6px 14px;font-size:8px;color:var(--accent);letter-spacing:0.06em;flex-shrink:0;min-height:22px;}
+#fp-search-wrap{padding:6px 14px;border-bottom:1px solid var(--border);flex-shrink:0;position:relative;}
+#fp-search{width:100%;background:rgba(245,238,230,0.06);border:1px solid var(--border);color:var(--offwhite);font-family:'Archivo',sans-serif;font-size:10px;padding:5px 26px 5px 8px;border-radius:1px;outline:none;box-sizing:border-box;}
+#fp-search::placeholder{color:rgba(226,201,168,0.3);}
+#fp-search:focus{border-color:rgba(201,169,110,0.5);}
+#fp-search-clear{position:absolute;right:20px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--accent);cursor:pointer;font-size:12px;padding:0;display:none;line-height:1;}
+#fp-search-count{padding:3px 14px 0;font-size:8px;color:var(--accent);letter-spacing:0.06em;flex-shrink:0;min-height:14px;}
 #fp-status.loading{color:var(--gold);}
 #fp-list{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--accent) transparent;}
 #fp-list::-webkit-scrollbar{width:3px;}
@@ -323,9 +336,15 @@ input[type="range"]{accent-color:var(--gold);cursor:pointer;}
   </div>
   <div id="fp-toolbar">
     <button id="fp-scan-btn" onclick="scanFeatures()">&#9740; Scan Frame</button>
+    <button id="fp-pick-btn" onclick="togglePickMode()">&#9678; Click to Pick</button>
     <button id="fp-clear-btn" onclick="clearHighlights()">Clear All</button>
   </div>
   <div id="fp-status">Pan map, then click Scan Frame</div>
+  <div id="fp-search-wrap" style="display:none">
+    <input type="text" id="fp-search" placeholder="Search roads, waterways…" oninput="filterFeatureList(this.value)">
+    <button id="fp-search-clear" onclick="clearSearch()">&#10005;</button>
+  </div>
+  <div id="fp-search-count"></div>
   <div id="fp-list"></div>
 </div>
 
@@ -628,6 +647,19 @@ input[type="range"]{accent-color:var(--gold);cursor:pointer;}
 
 <!-- DRAG MASK -->
 <div id="drag-mask"><p>Drop PNG onto map</p><small>Drag &amp; resize freely</small></div>
+
+<!-- PICK MODE CURSOR & TOAST -->
+<div id="pick-cursor">
+  <svg width="32" height="32" viewBox="0 0 32 32">
+    <circle cx="16" cy="16" r="10" fill="none" stroke="#C9A96E" stroke-width="2"/>
+    <line x1="16" y1="4" x2="16" y2="10" stroke="#C9A96E" stroke-width="2"/>
+    <line x1="16" y1="22" x2="16" y2="28" stroke="#C9A96E" stroke-width="2"/>
+    <line x1="4" y1="16" x2="10" y2="16" stroke="#C9A96E" stroke-width="2"/>
+    <line x1="22" y1="16" x2="28" y2="16" stroke="#C9A96E" stroke-width="2"/>
+    <circle cx="16" cy="16" r="2" fill="#C9A96E"/>
+  </svg>
+</div>
+<div id="pick-toast">Click on a road or feature to highlight it</div>
 
 <!-- STATUS BAR -->
 <div id="statusbar">
@@ -1609,18 +1641,21 @@ async function scanFeatures(){
 
   // Overpass query — fetch all named features in bbox
   const query = `
-[out:json][timeout:25];
+[out:json][timeout:30];
 (
   way["name"]["highway"](${bbox});
+  way["name~"."]["highway"](${bbox});
   way["name"]["waterway"](${bbox});
   way["name"]["railway"](${bbox});
   node["name"]["amenity"](${bbox});
   node["name"]["railway"="station"](${bbox});
   node["name"]["railway"="halt"](${bbox});
+  node["name"]["railway"="tram_stop"](${bbox});
   way["name"]["landuse"](${bbox});
   way["name"]["leisure"](${bbox});
   node["name"]["place"](${bbox});
   way["name"]["building"](${bbox});
+  relation["name"]["route"="road"](${bbox});
 );
 out body geom;
 `;
@@ -1687,22 +1722,40 @@ function getFeatureSubtype(f){
   return t.highway || t.waterway || t.railway || t.amenity || t.place || t.leisure || t.landuse || t.building || '';
 }
 
-function renderFeatureList(){
+function renderFeatureList(filterStr=''){
   const list = document.getElementById('fp-list');
   list.innerHTML = '';
+  const filter = filterStr.toLowerCase().trim();
 
   // Group features
   const groups = {};
   osmFeatures.forEach(f => {
-    const name = (f.tags||{}).name;
+    const name = (f.tags||{}).name || (f.tags||{})['name:en'] || '';
     if(!name) return;
     const cat = categoriseFeature(f);
     if(!groups[cat]) groups[cat] = [];
-    // Deduplicate by name
-    if(!groups[cat].find(x => x.name === name)){
+    // Deduplicate by name (case-insensitive)
+    if(!groups[cat].find(x => x.name.toLowerCase() === name.toLowerCase())){
       groups[cat].push({ id: f.id, name, subtype: getFeatureSubtype(f), feature: f });
     }
   });
+
+  // Apply filter
+  let totalVisible = 0;
+  if(filter){
+    Object.keys(groups).forEach(cat => {
+      groups[cat] = groups[cat].filter(item =>
+        item.name.toLowerCase().includes(filter) ||
+        item.subtype.toLowerCase().includes(filter)
+      );
+      totalVisible += groups[cat].length;
+    });
+    document.getElementById('fp-search-count').textContent =
+      totalVisible === 0 ? 'No results' : `${totalVisible} result${totalVisible===1?'':'s'}`;
+  } else {
+    Object.values(groups).forEach(g => totalVisible += g.length);
+    document.getElementById('fp-search-count').textContent = '';
+  }
 
   // Render each group
   Object.entries(OSM_GROUPS).forEach(([cat, meta]) => {
@@ -1978,6 +2031,199 @@ function removeHighlight(){
   if(itemEl) itemEl.classList.remove('highlighted');
   closeHlEditor();
   scheduleSave();
+}
+
+function filterFeatureList(val){
+  const clearBtn = document.getElementById('fp-search-clear');
+  clearBtn.style.display = val ? 'block' : 'none';
+  renderFeatureList(val);
+}
+
+function clearSearch(){
+  document.getElementById('fp-search').value = '';
+  document.getElementById('fp-search-clear').style.display = 'none';
+  document.getElementById('fp-search-count').textContent = '';
+  renderFeatureList('');
+}
+
+// ── CLICK TO PICK MODE ──────────────────────────────────
+let pickModeActive = false;
+
+function togglePickMode(){
+  pickModeActive = !pickModeActive;
+  const btn = document.getElementById('fp-pick-btn');
+  const cursor = document.getElementById('pick-cursor');
+  const toast = document.getElementById('pick-toast');
+
+  if(pickModeActive){
+    btn.classList.add('active');
+    btn.textContent = '✕ Exit Pick Mode';
+    // Change map cursor
+    document.getElementById('map').style.cursor = 'crosshair';
+    // Show toast
+    toast.classList.add('show');
+    setTimeout(()=>toast.classList.remove('show'), 2500);
+    // Disable map gestures so clicks don't pan
+    if(map) map.setOptions({gestureHandling:'none'});
+    // Add click listener
+    window._pickListener = map.addListener('click', onMapPickClick);
+    // Track mouse for custom cursor
+    document.addEventListener('mousemove', onPickMouseMove);
+    cursor.style.display = 'block';
+  } else {
+    exitPickMode();
+  }
+}
+
+function exitPickMode(){
+  pickModeActive = false;
+  const btn = document.getElementById('fp-pick-btn');
+  btn.classList.remove('active');
+  btn.textContent = '⊕ Click to Pick';
+  document.getElementById('map').style.cursor = '';
+  document.getElementById('pick-cursor').style.display = 'none';
+  if(map) map.setOptions({gestureHandling:'greedy'});
+  if(window._pickListener){ window._pickListener.remove(); window._pickListener=null; }
+  document.removeEventListener('mousemove', onPickMouseMove);
+}
+
+function onPickMouseMove(e){
+  const cursor = document.getElementById('pick-cursor');
+  cursor.style.left = e.clientX + 'px';
+  cursor.style.top = e.clientY + 'px';
+}
+
+async function onMapPickClick(e){
+  if(!pickModeActive) return;
+  const lat = e.latLng.lat();
+  const lng = e.latLng.lng();
+
+  // Show loading in status
+  const status = document.getElementById('fp-status');
+  const prevStatus = status.textContent;
+  status.textContent = 'Fetching feature…';
+  status.className = 'loading';
+
+  // Show toast
+  const toast = document.getElementById('pick-toast');
+  toast.textContent = 'Fetching…';
+  toast.classList.add('show');
+
+  try{
+    // Query OSM for all named ways within ~50m of click point
+    const delta = 0.0005; // ~55m
+    const bbox = `${lat-delta},${lng-delta},${lat+delta},${lng+delta}`;
+    const query = `
+[out:json][timeout:10];
+(
+  way["name"]["highway"](${bbox});
+  way["name"]["waterway"](${bbox});
+  way["name"]["railway"](${bbox});
+  way["name"]["landuse"](${bbox});
+  way["name"]["leisure"](${bbox});
+  node["name"]["amenity"](around:80,${lat},${lng});
+  node["name"]["railway"](around:80,${lat},${lng});
+);
+out body geom;
+`;
+
+    let data = null;
+    const mirrors = [
+      'https://overpass-api.de/api/interpreter',
+      'https://overpass.kumi.systems/api/interpreter'
+    ];
+    for(const mirror of mirrors){
+      try{
+        const res = await fetch(mirror,{
+          method:'POST',
+          body:'data='+encodeURIComponent(query),
+          headers:{'Content-Type':'application/x-www-form-urlencoded'}
+        });
+        if(res.ok){ data = await res.json(); break; }
+      }catch(e){ continue; }
+    }
+
+    if(!data || !data.elements || data.elements.length===0){
+      toast.textContent = 'Nothing found here — try clicking on a road line';
+      setTimeout(()=>toast.classList.remove('show'), 2000);
+      status.textContent = prevStatus;
+      status.className = '';
+      return;
+    }
+
+    // Pick the best match — prefer highways, then waterways, then others
+    // Also find the element closest to the click point
+    const priority = ['highway','waterway','railway','leisure','landuse','amenity'];
+    let best = null;
+    for(const p of priority){
+      best = data.elements.find(el=>(el.tags||{})[p] && (el.tags||{}).name);
+      if(best) break;
+    }
+    if(!best) best = data.elements.find(el=>(el.tags||{}).name);
+    if(!best){
+      toast.textContent = 'No named feature found here';
+      setTimeout(()=>toast.classList.remove('show'), 2000);
+      status.textContent = prevStatus;
+      status.className = '';
+      return;
+    }
+
+    const name = best.tags.name;
+    const featureId = best.id;
+
+    // Add to OSM features list if not already there
+    if(!osmFeatures.find(f=>f.id===featureId)){
+      osmFeatures.push(best);
+    }
+
+    // Show search box if hidden
+    document.getElementById('fp-search-wrap').style.display='block';
+
+    // Re-render list so item appears
+    renderFeatureList(document.getElementById('fp-search').value);
+
+    // Create highlight if doesn't exist
+    if(!highlights[featureId]){
+      const cat = categoriseFeature(best);
+      const meta = OSM_GROUPS[cat] || OSM_GROUPS.other;
+      const isLine = ['road','waterway','railway'].includes(cat);
+      highlights[featureId] = {
+        props:{
+          color: meta.color, width: isLine?4:2,
+          opacity:75, style:'solid', cap:'round',
+          glow:0, label:false, labelColor:'#3D2B1F'
+        },
+        svgEls:[], labelEl:null, feature:best
+      };
+      drawHighlight(featureId);
+    }
+
+    // Find item in list and open editor
+    const item = { id:featureId, name, subtype: getFeatureSubtype(best), feature:best };
+    openHlEditor(item);
+
+    // Flash the item in the list
+    setTimeout(()=>{
+      const el = document.querySelector(`.fp-item[data-id="${featureId}"]`);
+      if(el){
+        el.classList.add('highlighted');
+        el.scrollIntoView({behavior:'smooth', block:'nearest'});
+      }
+    }, 100);
+
+    toast.textContent = `✓ ${name}`;
+    setTimeout(()=>toast.classList.remove('show'), 2000);
+    status.textContent = `Picked: ${name}`;
+    status.className = '';
+    scheduleSave();
+
+  }catch(err){
+    toast.textContent = 'Error — try again';
+    setTimeout(()=>toast.classList.remove('show'), 2000);
+    status.textContent = prevStatus;
+    status.className = '';
+    console.error('Pick error:', err);
+  }
 }
 
 function clearHighlights(){
@@ -2263,6 +2509,7 @@ async function restoreState(){
     if(state.osmFeatures&&state.osmFeatures.length>0){
       osmFeatures=state.osmFeatures;
       renderFeatureList();
+      document.getElementById('fp-search-wrap').style.display='block';
       document.getElementById('fp-status').textContent=`Restored ${osmFeatures.length} features`;
     }
 
