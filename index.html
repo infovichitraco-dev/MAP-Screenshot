@@ -113,6 +113,25 @@ input[type="range"]{accent-color:var(--gold);cursor:pointer;}
 /* stage moves right when panel open */
 #stage{position:fixed;top:52px;left:260px;right:0;bottom:28px;overflow:hidden;transition:right 0.3s,left 0.3s;}
 #map{width:100%;height:100%;min-height:400px;}
+/* Reposition Google attribution — allowed under ToS as long as visible */
+#map .gmnoprint,#map .gm-style-cc{
+  transform-origin:bottom left!important;
+  transform:scale(0.65)!important;
+}
+#map .gm-style-cc{
+  bottom:2px!important;
+  left:2px!important;
+  right:auto!important;
+  top:auto!important;
+}
+#map .gmnoprint{
+  bottom:2px!important;
+  left:2px!important;
+  right:auto!important;
+  top:auto!important;
+}
+/* Hide the Google logo top-left (it's a duplicate — attribution remains in bottom-left) */
+#map .gm-style a[href*="maps.google"]{display:none!important;}
 #stage.panel-open{right:300px;}
 #stage.fp-collapsed{left:48px;}
 #shape-props{left:260px;}
@@ -1572,16 +1591,22 @@ function updateExportInfo(){
   const gridEl=document.getElementById('opt-grid');
   const scaleEl=document.getElementById('opt-scale');
   if(!gridEl||!scaleEl||!map)return;
-  const{cols,rows}=parseGrid(gridEl.value);
+  const{cols:gridCols}=parseGrid(gridEl.value);
   const scale=parseInt(scaleEl.value);
-  const tw=cols*TILE_SIZE*scale,th=rows*TILE_SIZE*scale;
+  // Output dimensions match crop frame aspect ratio
+  const outW=gridCols*TILE_SIZE*scale;
+  const outH=cropW>0?Math.round(outW*(cropH/cropW)):outW;
   const zoomOpt=document.getElementById('opt-zoom').value;
   const currentZoom=map.getZoom();
   const exportZoom=zoomOpt==='same'?currentZoom:zoomOpt==='plus1'?currentZoom+1:currentZoom+2;
   const fmt=document.getElementById('opt-format').value.toUpperCase();
+  // Estimate tile count needed for crop frame
+  const zoomScale=Math.pow(2,exportZoom-currentZoom);
+  const estCols=Math.ceil(cropW*zoomScale/TILE_SIZE)+2;
+  const estRows=Math.ceil(cropH*zoomScale/TILE_SIZE)+2;
   document.getElementById('exp-info-box').innerHTML=
-    `<b>Output:</b> ${tw.toLocaleString()} × ${th.toLocaleString()} px &nbsp;·&nbsp; <b>Tiles:</b> ${cols*rows} &nbsp;·&nbsp; <b>Format:</b> ${fmt}<br>
-     <b>Map zoom:</b> ${exportZoom} &nbsp;·&nbsp; <b>Scale:</b> ${scale}× &nbsp;·&nbsp; Shapes &amp; markers composited on export.`;
+    `<b>Output:</b> ${outW.toLocaleString()} × ${outH.toLocaleString()} px &nbsp;·&nbsp; <b>Tiles:</b> ~${estCols*estRows} &nbsp;·&nbsp; <b>Format:</b> ${fmt}<br>
+     <b>Map zoom:</b> ${exportZoom} &nbsp;·&nbsp; <b>Scale:</b> ${scale}× &nbsp;·&nbsp; Exports exactly what's inside the gold frame.`;
 }
 
 function resetModal(){
@@ -1621,7 +1646,6 @@ async function startTileExport(){
   document.getElementById('prog').style.display='block';
   document.getElementById('prog-label').style.display='block';
 
-  const{cols,rows}=parseGrid(document.getElementById('opt-grid').value);
   const scale=parseInt(document.getElementById('opt-scale').value);
   const fmt=document.getElementById('opt-format').value;
   const zoomOpt=document.getElementById('opt-zoom').value;
@@ -1629,34 +1653,69 @@ async function startTileExport(){
   const exportZoom=zoomOpt==='same'?currentZoom:zoomOpt==='plus1'?currentZoom+1:currentZoom+2;
   const zoomScale=Math.pow(2,exportZoom-currentZoom);
 
-  const tileW=TILE_SIZE*scale,tileH=TILE_SIZE*scale;
-  const totalW=cols*tileW,totalH=rows*tileH;
+  // ── KEY FIX: calculate tiles needed to cover the CROP FRAME exactly ──
+  // The crop frame in stage pixels → how many world pixels at exportZoom
+  // At exportZoom: 1 world px = 1/scale output px
+  // At currentZoom (screen): 1 screen px ≈ 1 world px
+  // At exportZoom: 1 screen px = zoomScale world px
+  // So crop frame of cropW screen px = cropW * zoomScale world px at exportZoom
+  // Each tile covers TILE_SIZE world px → cols needed = ceil(cropW * zoomScale / TILE_SIZE)
+  // Add 1 tile buffer each side to ensure full coverage
+  const cropWorldW = cropW * zoomScale;
+  const cropWorldH = cropH * zoomScale;
+  const cols = Math.ceil(cropWorldW / TILE_SIZE) + 2;
+  const rows = Math.ceil(cropWorldH / TILE_SIZE) + 2;
+
+  const tileW=TILE_SIZE*scale, tileH=TILE_SIZE*scale;
+  const rawW=cols*tileW, rawH=rows*tileH;
   const total=cols*rows;
+
+  // The final output size matches the crop frame aspect at chosen resolution
+  // Use the opt-grid selection to determine output pixel width
+  const gridVal=document.getElementById('opt-grid').value;
+  const{cols:gridCols}=parseGrid(gridVal);
+  const outW=gridCols*TILE_SIZE*scale;
+  const outH=Math.round(outW*(cropH/cropW));
 
   // Tile grid UI
   const tg=document.getElementById('tile-grid');
   tg.style.display='grid';
-  tg.style.gridTemplateColumns=`repeat(${cols},${Math.min(60,200/cols)}px)`;
-  tg.style.gridTemplateRows=`repeat(${rows},${Math.min(40,140/rows)}px)`;
+  tg.style.gridTemplateColumns=`repeat(${cols},${Math.min(50,160/cols)}px)`;
+  tg.style.gridTemplateRows=`repeat(${rows},${Math.min(35,120/rows)}px)`;
   tg.innerHTML='';
   const cells=[];
   for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
-    const cell=document.createElement('div');cell.className='tile-cell loading';cell.textContent=`${c},${r}`;cell.style.fontSize='7px';tg.appendChild(cell);cells.push(cell);
+    const cell=document.createElement('div');cell.className='tile-cell loading';
+    cell.textContent=`${c},${r}`;cell.style.fontSize='7px';
+    tg.appendChild(cell);cells.push(cell);
   }
 
   setProg(5);setSt('Building tile coordinates…');
 
-  const center=map.getCenter();
-  const cLat=center.lat(),cLng=center.lng();
-  const{px:cPx,py:cPy}=latLngToPixel(cLat,cLng,exportZoom);
+  // Center of crop frame in stage coords → lat/lng
+  const stage=document.getElementById('stage');
+  const stageCenterX=stage.offsetWidth/2;
+  const stageCenterY=stage.offsetHeight/2;
+  const cropCenterX=cropX+cropW/2;
+  const cropCenterY=cropY+cropH/2;
+
+  // Convert crop center from stage px to lat/lng
+  const bounds=map.getBounds();
+  const ne=bounds.getNorthEast(), sw2=bounds.getSouthWest();
+  const latPerPx=(ne.lat()-sw2.lat())/stage.offsetHeight;
+  const lngPerPx=(ne.lng()-sw2.lng())/stage.offsetWidth;
+  const cropCenterLat=ne.lat()-cropCenterY*latPerPx;
+  const cropCenterLng=sw2.lng()+cropCenterX*lngPerPx;
+
+  const{px:cPx,py:cPy}=latLngToPixel(cropCenterLat,cropCenterLng,exportZoom);
   const startPx=cPx-cols*TILE_SIZE/2;
   const startPy=cPy-rows*TILE_SIZE/2;
   const styleParams=styleToParams(buildStyle());
 
-  // Create canvas
-  const canvas=document.createElement('canvas');
-  canvas.width=totalW;canvas.height=totalH;
-  const ctx=canvas.getContext('2d');
+  // Create raw tile canvas (slightly larger than needed)
+  const rawCanvas=document.createElement('canvas');
+  rawCanvas.width=rawW; rawCanvas.height=rawH;
+  const rawCtx=rawCanvas.getContext('2d');
   let done=0;
 
   const tilePromises=[];
@@ -1668,37 +1727,45 @@ async function startTileExport(){
       const url=`https://maps.googleapis.com/maps/api/staticmap?center=${tLat},${tLng}&zoom=${exportZoom}&size=${TILE_SIZE}x${TILE_SIZE}&scale=${scale}&maptype=roadmap&${styleParams}&key=${API_KEY}`;
       const ci=r*cols+c;
       const p=loadImage(url).then(img=>{
-        ctx.drawImage(img,c*tileW,r*tileH,tileW,tileH);
+        rawCtx.drawImage(img,c*tileW,r*tileH,tileW,tileH);
         cells[ci].classList.remove('loading');cells[ci].classList.add('done');cells[ci].textContent='✓';
-        done++;setProg(5+Math.round(done/total*60));setSt(`Tiles: ${done}/${total}`);
+        done++;setProg(5+Math.round(done/total*65));setSt(`Tiles: ${done}/${total}`);
       }).catch(()=>{cells[ci].style.background='rgba(200,60,60,0.2)';cells[ci].textContent='✗';done++;});
       tilePromises.push(p);
     }
   }
 
   await Promise.all(tilePromises);
-  setProg(68);setSt('Compositing SVG shapes…');await sleep(60);
+  setProg(72);setSt('Clipping to frame…');await sleep(40);
 
-  // ── Composite SVG shapes onto canvas ──────────────────
-  const stage=document.getElementById('stage');
-  const stageCenterX=stage.offsetWidth/2;
-  const stageCenterY=stage.offsetHeight/2;
-  const scToCanvas=zoomScale*scale;
+  // ── Clip raw tile canvas to exact crop frame area ──
+  // The raw canvas is centered on the crop center
+  // Crop frame in world px at exportZoom:
+  const cropWWorld=cropWorldW*scale; // in output px
+  const cropHWorld=cropWorldH*scale;
+  // Offset from raw canvas center to start of crop area
+  const clipX=Math.round(rawW/2 - cropWWorld/2);
+  const clipY=Math.round(rawH/2 - cropHWorld/2);
 
-  // Render SVG to canvas
-  const svgNode=document.getElementById('svg-layer');
-  // Remove selection indicator before export
+  // Create final output canvas at chosen resolution
+  const finalCanvas=document.createElement('canvas');
+  finalCanvas.width=outW; finalCanvas.height=outH;
+  const finalCtx=finalCanvas.getContext('2d');
+
+  // Draw clipped region scaled to output size
+  finalCtx.drawImage(rawCanvas,clipX,clipY,cropWWorld,cropHWorld,0,0,outW,outH);
+
+  setProg(78);setSt('Compositing SVG shapes…');await sleep(40);
+
+  // ── Composite SVG shapes ──────────────────────────────
   const selInd=document.getElementById('sel-indicator');
   if(selInd)selInd.style.display='none';
-  // Make hl-group visible for export (it's always in the SVG, just ensure it's shown)
   const hlGroup=document.getElementById('hl-group');
   if(hlGroup)hlGroup.style.display='';
 
-  // Serialize SVG and render at correct offset/scale
+  const svgNode=document.getElementById('svg-layer');
   const svgClone=svgNode.cloneNode(true);
-  // Remove UI elements
   svgClone.querySelector('#sel-indicator')?.remove();
-  // Set viewBox to full stage
   svgClone.setAttribute('width',stage.offsetWidth);
   svgClone.setAttribute('height',stage.offsetHeight);
 
@@ -1706,20 +1773,21 @@ async function startTileExport(){
   const svgBlob=new Blob([svgStr],{type:'image/svg+xml;charset=utf-8'});
   const svgUrl=URL.createObjectURL(svgBlob);
 
+  // Scale from stage coords to output canvas coords
+  // Stage shape at (sx,sy) relative to CROP CENTER → output canvas coords
+  const stageToOut=outW/cropWWorld*scale;
+
   await new Promise(res=>{
     const svgImg=new Image();
     svgImg.onload=()=>{
-      // Draw SVG shapes scaled and offset onto canvas
-      // Stage coords → canvas coords:
-      // Canvas center = totalW/2, totalH/2
-      // Stage shape at (sx,sy) → canvas at: (totalW/2 + (sx-stageCenterX)*scToCanvas, ...)
-      const offX=totalW/2-stageCenterX*scToCanvas;
-      const offY=totalH/2-stageCenterY*scToCanvas;
-      ctx.save();
-      ctx.translate(offX,offY);
-      ctx.scale(scToCanvas,scToCanvas);
-      ctx.drawImage(svgImg,0,0);
-      ctx.restore();
+      // Offset: crop frame top-left in stage coords
+      const offX=-cropX*(outW/cropW);
+      const offY=-cropY*(outH/cropH);
+      finalCtx.save();
+      finalCtx.translate(offX,offY);
+      finalCtx.scale(outW/cropW,outH/cropH);
+      finalCtx.drawImage(svgImg,0,0,stage.offsetWidth,stage.offsetHeight);
+      finalCtx.restore();
       URL.revokeObjectURL(svgUrl);
       res();
     };
@@ -1729,38 +1797,38 @@ async function startTileExport(){
 
   if(selInd)selInd.style.display='';
 
-  setProg(80);setSt('Compositing PNG markers…');await sleep(40);
+  setProg(88);setSt('Compositing PNG markers…');await sleep(40);
 
-  // ── PNG Markers ────────────────────────────────────────
+  // ── PNG Markers ── relative to crop frame ─────────────
   for(const m of markers){
-    const mx=m.x+m.w/2,my=m.y+m.h/2;
-    const mOffX=mx-stageCenterX,mOffY=my-stageCenterY;
-    const canvasX=totalW/2+mOffX*scToCanvas;
-    const canvasY=totalH/2+mOffY*scToCanvas;
-    const markerW=m.w*scToCanvas,markerH=m.h*scToCanvas;
+    // Marker position relative to crop frame top-left
+    const mx=(m.x-cropX+m.w/2)*(outW/cropW);
+    const my=(m.y-cropY+m.h/2)*(outH/cropH);
+    const markerW=m.w*(outW/cropW);
+    const markerH=m.h*(outH/cropH);
     const mImg=await loadImage(m.src).catch(()=>null);
-    if(mImg)ctx.drawImage(mImg,canvasX-markerW/2,canvasY-markerH/2,markerW,markerH);
+    if(mImg)finalCtx.drawImage(mImg,mx-markerW/2,my-markerH/2,markerW,markerH);
   }
 
-  setProg(94);setSt('Finalising…');await sleep(60);
+  setProg(96);setSt('Finalising…');await sleep(40);
 
   let dataURL,ext;
-  if(fmt==='png'){dataURL=canvas.toDataURL('image/png');ext='png';}
-  else if(fmt==='jpeg'){dataURL=canvas.toDataURL('image/jpeg',0.95);ext='jpg';}
-  else{dataURL=canvas.toDataURL('image/png');ext='pdf';}
+  if(fmt==='png'){dataURL=finalCanvas.toDataURL('image/png');ext='png';}
+  else if(fmt==='jpeg'){dataURL=finalCanvas.toDataURL('image/jpeg',0.95);ext='jpg';}
+  else{dataURL=finalCanvas.toDataURL('image/png');ext='pdf';}
 
   setProg(100);setSt('');
   document.getElementById('exp-progress').style.display='none';
   document.getElementById('exp-result').style.display='block';
   document.getElementById('m-title').textContent='Ready to Download';
-  document.getElementById('m-sub').textContent=`${totalW.toLocaleString()} × ${totalH.toLocaleString()} px · ${cols}×${rows} tiles · ${fmt.toUpperCase()}`;
+  document.getElementById('m-sub').textContent=`${outW.toLocaleString()} × ${outH.toLocaleString()} px · Frame clipped · ${fmt.toUpperCase()}`;
   document.getElementById('prev-img').src=dataURL;
   document.getElementById('prev-wrap').style.display='flex';
 
   if(fmt==='pdf'){
     document.getElementById('btn-dl').onclick=()=>{
       const win=window.open('','_blank');
-      win.document.write(`<!DOCTYPE html><html><head><style>*{margin:0;padding:0;}body{width:${totalW}px;height:${totalH}px;overflow:hidden;}img{width:100%;height:100%;display:block;}@page{size:${totalW}px ${totalH}px;margin:0;}</style></head><body><img src="${dataURL}" onload="window.print()"></body></html>`);
+      win.document.write(`<!DOCTYPE html><html><head><style>*{margin:0;padding:0;}body{width:${outW}px;height:${outH}px;overflow:hidden;}img{width:100%;height:100%;display:block;}@page{size:${outW}px ${outH}px;margin:0;}</style></head><body><img src="${dataURL}" onload="window.print()"></body></html>`);
       win.document.close();
     };
   } else {
