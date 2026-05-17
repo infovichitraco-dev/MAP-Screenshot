@@ -129,6 +129,10 @@ input[type="range"]{accent-color:var(--gold);cursor:pointer;}
 
 /* ── SVG DRAWING LAYER ── */
 #svg-layer{position:absolute;inset:0;z-index:15;overflow:visible;}
+.poly-dot{fill:var(--gold);stroke:#fff;stroke-width:1.5;r:4;pointer-events:none;}
+.poly-preview{stroke:var(--gold);stroke-width:2;stroke-dasharray:6,3;fill:none;opacity:0.6;pointer-events:none;}
+#poly-hint{position:fixed;bottom:44px;left:50%;transform:translateX(-50%);background:var(--bark);color:var(--sand);font-family:'Archivo',sans-serif;font-size:9px;letter-spacing:0.1em;padding:5px 14px;z-index:600;pointer-events:none;opacity:0;transition:opacity 0.2s;white-space:nowrap;border:1px solid var(--border);}
+#poly-hint.show{opacity:1;}
 #svg-layer.draw-mode{cursor:crosshair;}
 #svg-layer.select-mode{cursor:default;}
 
@@ -458,6 +462,14 @@ input[type="range"]{accent-color:var(--gold);cursor:pointer;}
       <svg width="14" height="14"><line x1="2" y1="7" x2="12" y2="7" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3,2"/></svg>
       <span class="dt-tip">Dashed</span>
     </button>
+    <button class="dt-btn" id="tool-polyline" onclick="setTool('polyline')">
+      <svg width="14" height="14"><polyline points="2,12 5,4 9,9 12,3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+      <span class="dt-tip">Polyline — click points, dbl-click to finish (P)</span>
+    </button>
+    <button class="dt-btn" id="tool-polygon" onclick="setTool('polygon')">
+      <svg width="14" height="14"><polygon points="7,2 12,6 10,12 4,12 2,6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+      <span class="dt-tip">Polygon — click points, dbl-click to close &amp; fill (G)</span>
+    </button>
   </div>
   <div class="dt-group">
     <button class="dt-btn" onclick="deleteShape()">
@@ -660,6 +672,7 @@ input[type="range"]{accent-color:var(--gold);cursor:pointer;}
   </svg>
 </div>
 <div id="pick-toast">Click on a road or feature to highlight it</div>
+<div id="poly-hint">Click to add points · Double-click to finish · Esc to cancel</div>
 
 <!-- STATUS BAR -->
 <div id="statusbar">
@@ -943,6 +956,10 @@ function onDrop(e){e.preventDefault();dc=0;document.getElementById('drag-mask').
 // ═══════════════════════════════════════════════════════
 let currentTool='select';
 let shapes=[];
+// Polyline in-progress state
+let polylinePoints=[];   // [{x,y}] screen coords
+let polylineEl=null;     // live SVG polyline element
+let polylinePreviewEl=null; // preview segment following mouse
 let selectedShape=null;
 let isDrawing=false;
 let drawStart={x:0,y:0};
@@ -957,18 +974,25 @@ const defaultProps={
 };
 
 function setTool(t){
+  // Cancel any in-progress polyline before switching
+  if(currentTool==='polyline' && t!=='polyline') cancelPolyline();
+if(currentTool==='polygon' && t!=='polygon') cancelPolygon();
   currentTool=t;
-  // Update toolbar
   document.querySelectorAll('.dt-btn').forEach(b=>b.classList.remove('active'));
   const btn=document.getElementById('tool-'+t);
   if(btn)btn.classList.add('active');
-  // Update SVG cursor
   const svg=document.getElementById('svg-layer');
   svg.className=t==='select'?'select-mode':'draw-mode';
-  // Update map gesture handling
   if(map)map.setOptions({gestureHandling:t==='select'?'greedy':'none'});
-  // Deselect shape when switching to draw tool
   if(t!=='select')deselectShape();
+  // Show hint for polyline
+  const hint=document.getElementById('poly-hint');
+  if(t==='polyline'||t==='polygon'){
+    hint.textContent = t==='polygon'
+      ? 'Click to add points · Double-click to close & fill · Esc to cancel'
+      : 'Click to add points · Double-click to finish · Esc to cancel';
+    hint.classList.add('show');
+  } else {hint.classList.remove('show');}
 }
 
 function getSVGPoint(e){
@@ -982,12 +1006,41 @@ const svgEl=document.getElementById('svg-layer');
 
 svgEl.addEventListener('mousedown',e=>{
   if(currentTool==='select')return;
+  // Handle polyline separately — uses click not drag
+  if(currentTool==='polyline'){
+    e.preventDefault();e.stopPropagation();
+    return; // handled by click event below
+  }
   if(e.target!==svgEl&&e.target.id!=='svg-layer'&&e.target.closest('#shapes-group')&&e.target.tagName!=='svg')return;
   e.preventDefault();
   e.stopPropagation();
   isDrawing=true;
   drawStart=getSVGPoint(e);
   currentDrawEl=startDraw(drawStart);
+});
+
+// Polyline/Polygon: single click adds point, dblclick finishes
+svgEl.addEventListener('click',e=>{
+  if(currentTool!=='polyline'&&currentTool!=='polygon')return;
+  e.preventDefault();e.stopPropagation();
+  const pt=getSVGPoint(e);
+  addPolylinePoint(pt);
+});
+
+svgEl.addEventListener('dblclick',e=>{
+  if(currentTool==='polyline'){e.preventDefault();e.stopPropagation();finishPolyline();}
+  else if(currentTool==='polygon'){e.preventDefault();e.stopPropagation();finishPolygon();}
+});
+
+// Preview segment follows mouse
+svgEl.addEventListener('mousemove',e=>{
+  if((currentTool!=='polyline'&&currentTool!=='polygon')||polylinePoints.length===0)return;
+  const pt=getSVGPoint(e);
+  updatePolylinePreview(pt);
+  // For polygon, also show closing preview line back to first point
+  if(currentTool==='polygon'&&polylinePoints.length>1){
+    updatePolygonClosePreview(pt);
+  }
 });
 
 document.addEventListener('mousemove',e=>{
@@ -1097,6 +1150,172 @@ function applyDefaultSize(el,pt){
   else if(type==='ellipse'||type==='circle'){el.setAttribute('rx',50);el.setAttribute('ry',type==='circle'?50:30);}
   else if(type==='line'||type==='arrow'||type==='dashed'){el.setAttribute('x2',pt.x+100);el.setAttribute('y2',pt.y);}
   else if(type==='curve'){el.setAttribute('d',`M${pt.x},${pt.y} Q${pt.x+50},${pt.y-40} ${pt.x+100},${pt.y}`);}
+}
+
+// ── POLYLINE TOOL ──────────────────────────────────────
+function addPolylinePoint(pt){
+  const ns='http://www.w3.org/2000/svg';
+
+  // Add dot at click point
+  const dot=document.createElementNS(ns,'circle');
+  dot.setAttribute('class','poly-dot');
+  dot.setAttribute('cx',pt.x);dot.setAttribute('cy',pt.y);dot.setAttribute('r',4);
+  document.getElementById('shapes-group').appendChild(dot);
+
+  polylinePoints.push({pt, dot});
+
+  if(!polylineEl){
+    // First point — create the polyline element
+    const el=document.createElementNS(ns,'polyline');
+    el.setAttribute('data-type','polyline');
+    el.setAttribute('points',`${pt.x},${pt.y}`);
+    const p={...defaultProps, fillOn:false};
+    applyPropsToEl(el,p);
+    document.getElementById('shapes-group').appendChild(el);
+    polylineEl=el;
+  } else {
+    // Append point
+    const pts=polylineEl.getAttribute('points')||'';
+    polylineEl.setAttribute('points',pts+` ${pt.x},${pt.y}`);
+  }
+
+  // Create/update preview line
+  if(!polylinePreviewEl){
+    const prev=document.createElementNS(ns,'line');
+    prev.setAttribute('class','poly-preview');
+    prev.setAttribute('x1',pt.x);prev.setAttribute('y1',pt.y);
+    prev.setAttribute('x2',pt.x);prev.setAttribute('y2',pt.y);
+    document.getElementById('shapes-group').appendChild(prev);
+    polylinePreviewEl=prev;
+  } else {
+    polylinePreviewEl.setAttribute('x1',pt.x);
+    polylinePreviewEl.setAttribute('y1',pt.y);
+  }
+}
+
+function updatePolylinePreview(pt){
+  if(!polylinePreviewEl)return;
+  polylinePreviewEl.setAttribute('x2',pt.x);
+  polylinePreviewEl.setAttribute('y2',pt.y);
+}
+
+function finishPolyline(){
+  if(polylinePoints.length<2){cancelPolyline();return;}
+
+  // Remove dots and preview
+  polylinePoints.forEach(p=>p.dot.remove());
+  if(polylinePreviewEl){polylinePreviewEl.remove();polylinePreviewEl=null;}
+
+  // Wrap in a group like other shapes
+  const el=polylineEl;
+  polylineEl=null;
+  polylinePoints=[];
+
+  const ns='http://www.w3.org/2000/svg';
+  const g=document.createElementNS(ns,'g');
+  g.setAttribute('class','shape-wrap');
+  const id='shape-'+Date.now();
+  g.setAttribute('data-id',id);
+
+  // Move el into group
+  el.parentNode.removeChild(el);
+  g.appendChild(el);
+  document.getElementById('shapes-group').appendChild(g);
+
+  const shapeData={id,el,g,type:'polyline',props:{...defaultProps,fillOn:false},startPt:{x:0,y:0}};
+  shapes.push(shapeData);
+  g.addEventListener('mousedown',ev=>{if(currentTool!=='select')return;ev.stopPropagation();selectShape(shapeData);});
+
+  document.getElementById('poly-hint').classList.remove('show');
+  setTool('select');
+  selectShape(shapeData);
+  pushUndo();
+  updateStatus();
+  scheduleSave();
+}
+
+function cancelPolyline(){
+  polylinePoints.forEach(p=>p.dot.remove());
+  if(polylineEl){polylineEl.remove();polylineEl=null;}
+  if(polylinePreviewEl){polylinePreviewEl.remove();polylinePreviewEl=null;}
+  polylinePoints=[];
+  document.getElementById('poly-hint').classList.remove('show');
+}
+
+// ── POLYGON TOOL ─────────────────────────────────────────
+// Uses same addPolylinePoint infrastructure but closes on finish
+let polygonClosePreviewEl=null;
+
+function updatePolygonClosePreview(pt){
+  // Show dashed line from current mouse back to first point
+  if(polylinePoints.length<2)return;
+  const ns='http://www.w3.org/2000/svg';
+  const first=polylinePoints[0].pt;
+  if(!polygonClosePreviewEl){
+    polygonClosePreviewEl=document.createElementNS(ns,'line');
+    polygonClosePreviewEl.setAttribute('class','poly-preview');
+    polygonClosePreviewEl.style.opacity='0.4';
+    document.getElementById('shapes-group').appendChild(polygonClosePreviewEl);
+  }
+  polygonClosePreviewEl.setAttribute('x1',pt.x);
+  polygonClosePreviewEl.setAttribute('y1',pt.y);
+  polygonClosePreviewEl.setAttribute('x2',first.pt.x);
+  polygonClosePreviewEl.setAttribute('y2',first.pt.y);
+}
+
+function finishPolygon(){
+  if(polylinePoints.length<3){cancelPolygon();return;}
+
+  // Remove dots, preview lines
+  polylinePoints.forEach(p=>p.dot.remove());
+  if(polylinePreviewEl){polylinePreviewEl.remove();polylinePreviewEl=null;}
+  if(polygonClosePreviewEl){polygonClosePreviewEl.remove();polygonClosePreviewEl=null;}
+
+  // Build polygon from polyline points
+  // Remove the in-progress polyline element
+  if(polylineEl){polylineEl.remove();polylineEl=null;}
+
+  const pts=polylinePoints.map(p=>`${p.pt.x},${p.pt.y}`).join(' ');
+  polylinePoints=[];
+
+  const ns='http://www.w3.org/2000/svg';
+  const el=document.createElementNS(ns,'polygon');
+  el.setAttribute('data-type','polygon');
+  el.setAttribute('points',pts);
+
+  // Default props with fill enabled
+  const p={...defaultProps, fillOn:true, fillOpacity:40};
+  applyPropsToEl(el,p);
+
+  const g=document.createElementNS(ns,'g');
+  g.setAttribute('class','shape-wrap');
+  const id='shape-'+Date.now();
+  g.setAttribute('data-id',id);
+  g.appendChild(el);
+  document.getElementById('shapes-group').appendChild(g);
+
+  const shapeData={id,el,g,type:'polygon',props:{...p},startPt:{x:0,y:0}};
+  shapes.push(shapeData);
+  g.addEventListener('mousedown',ev=>{
+    if(currentTool!=='select')return;
+    ev.stopPropagation();selectShape(shapeData);
+  });
+
+  document.getElementById('poly-hint').classList.remove('show');
+  setTool('select');
+  selectShape(shapeData);
+  pushUndo();
+  updateStatus();
+  scheduleSave();
+}
+
+function cancelPolygon(){
+  polylinePoints.forEach(p=>p.dot.remove());
+  if(polylineEl){polylineEl.remove();polylineEl=null;}
+  if(polylinePreviewEl){polylinePreviewEl.remove();polylinePreviewEl=null;}
+  if(polygonClosePreviewEl){polygonClosePreviewEl.remove();polygonClosePreviewEl=null;}
+  polylinePoints=[];
+  document.getElementById('poly-hint').classList.remove('show');
 }
 
 function finaliseShape(el){
@@ -1316,7 +1535,11 @@ function redo(){
 document.addEventListener('keydown',e=>{
   if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;
   if(e.key==='Delete'||e.key==='Backspace'){pushUndo();deleteShape();deleteSelected();}
-  if(e.key==='Escape'){deselectShape();deselect();setTool('select');}
+  if(e.key==='Escape'){
+  if(currentTool==='polyline'&&polylinePoints.length>0){cancelPolyline();setTool('select');}
+  else if(currentTool==='polygon'&&polylinePoints.length>0){cancelPolygon();setTool('select');}
+  else{deselectShape();deselect();setTool('select');}
+}
   if(e.key==='d'&&(e.metaKey||e.ctrlKey)){e.preventDefault();pushUndo();duplicateShape();}
   if(e.key==='z'&&(e.metaKey||e.ctrlKey)&&!e.shiftKey){e.preventDefault();undo();}
   if((e.key==='z'&&(e.metaKey||e.ctrlKey)&&e.shiftKey)||(e.key==='y'&&e.ctrlKey)){e.preventDefault();redo();}
@@ -1326,6 +1549,8 @@ document.addEventListener('keydown',e=>{
   if(e.key==='o'&&!e.metaKey&&!e.ctrlKey)setTool('ellipse');
   if(e.key==='l'&&!e.metaKey&&!e.ctrlKey)setTool('line');
   if(e.key==='a'&&!e.metaKey&&!e.ctrlKey)setTool('arrow');
+if(e.key==='p'&&!e.metaKey&&!e.ctrlKey)setTool('polyline');
+if(e.key==='g'&&!e.metaKey&&!e.ctrlKey)setTool('polygon');
 });
 
 // ═══════════════════════════════════════════════════════
