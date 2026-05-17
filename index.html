@@ -965,7 +965,7 @@ function onS(){
 function onColor(k,v){ if(LAYERS[k]){LAYERS[k].c=v;} onS(); }
 function onVis(){ onS(); }
 function onAdj(){ onS(); }
-function SC(){} // no-op, kept for compat
+// SC is no longer used
 
 function resetStyle(){
   const DEFAULTS = {
@@ -2940,7 +2940,15 @@ async function restoreState(){
   if(!db) return;
   let state;
   try{ state=await dbGet('state','main'); }catch(e){return;}
-  if(!state||state.v!==3) return;
+  if(!state) return;
+  // If old format (v3 with SC/SA/SV), clear and start fresh with new LAYERS system
+  if(state.v===3){
+    console.log('Old v3 state detected — clearing for v4 upgrade');
+    try{ await dbClear('state'); }catch(e){}
+    applyStyle(); // apply defaults
+    return;
+  }
+  if(state.v!==4) return;
 
   const tryRestore=async()=>{
     if(!map){setTimeout(()=>tryRestore(),200);return;}
