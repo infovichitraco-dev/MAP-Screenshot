@@ -957,7 +957,9 @@ function onS(){
     if(ci) LAYERS[key].c=ci.value;
     if(oi) LAYERS[key].o=parseInt(oi.value);
   });
-  if(map)map.setOptions({styles:buildStyle()});
+  if(!map){console.warn('onS: map not ready yet');return;}
+  const style=buildStyle();
+  map.setOptions({styles:style});
   scheduleSave();
 }
 
@@ -1816,6 +1818,22 @@ function pixelToLatLng(px,py,zoom){
 
 function loadImage(url){return new Promise((res,rej)=>{const img=new Image();img.crossOrigin='anonymous';img.onload=()=>res(img);img.onerror=()=>rej(new Error('Tile failed'));img.src=url;});}
 
+// Convert style array to Google Static Maps API style params
+function styleToParams(styleArr){
+  return styleArr.map(rule=>{
+    let parts=[];
+    if(rule.featureType)parts.push('feature:'+rule.featureType);
+    if(rule.elementType)parts.push('element:'+rule.elementType);
+    if(rule.stylers)rule.stylers.forEach(st=>Object.entries(st).forEach(([k,v])=>{
+      // Static API uses 0x hex for colors
+      const val=typeof v==='string'&&v.startsWith('#')?v.replace('#','0x'):v;
+      parts.push(k+':'+val);
+    }));
+    if(parts.length===0)return null;
+    return 'style='+encodeURIComponent(parts.join('|'));
+  }).filter(Boolean).join('&');
+}
+
 async function startTileExport(){
   if(!map)return;
   document.getElementById('exp-options').style.display='none';
@@ -1870,6 +1888,24 @@ async function startTileExport(){
 
   setProg(5);setSt('Building tile coordinates…');
 
+  // Wait for map bounds to be available (can be null if map not settled)
+  let bounds=map.getBounds();
+  if(!bounds){
+    setSt('Waiting for map to settle…');
+    await new Promise(res=>{
+      const l=map.addListener('bounds_changed',()=>{
+        bounds=map.getBounds();
+        if(bounds){google.maps.event.removeListener(l);res();}
+      });
+      setTimeout(res,3000); // timeout after 3s
+    });
+    bounds=map.getBounds();
+  }
+  if(!bounds){
+    setSt('Error: map bounds unavailable. Pan the map slightly and try again.');
+    return;
+  }
+
   // Center of crop frame in stage coords → lat/lng
   const stage=document.getElementById('stage');
   const stageCenterX=stage.offsetWidth/2;
@@ -1878,7 +1914,6 @@ async function startTileExport(){
   const cropCenterY=cropY+cropH/2;
 
   // Convert crop center from stage px to lat/lng
-  const bounds=map.getBounds();
   const ne=bounds.getNorthEast(), sw2=bounds.getSouthWest();
   const latPerPx=(ne.lat()-sw2.lat())/stage.offsetHeight;
   const lngPerPx=(ne.lng()-sw2.lng())/stage.offsetWidth;
